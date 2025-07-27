@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "642814652841",
+    "project_id": "planejamento-financeiro-e0a27",
+    "storage_bucket": "planejamento-financeiro-e0a27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642814652841:android:4112401939bfd83538d4b8",
+        "android_client_info": {
+          "package_name": "br.com.janilso.planejamentofinanceiro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "642814652841-n7he2814fm9oir95dpj7hr50kfn51cnn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.janilso.planejamentofinanceiro",
+            "certificate_hash": "305407f7311f8e594d51c9f31a912474933df0a1"
+          }
+        },
+        {
+          "client_id": "642814652841-8ujpaeti2oh6t0cii4ucdu3ol3ncgckk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9XLs08tJLkTHtCH5UOQnBGfRLU0tpilw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "642814652841-8ujpaeti2oh6t0cii4ucdu3ol3ncgckk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642814652841:android:55cf0288ba633cae38d4b8",
+        "android_client_info": {
+          "package_name": "com.example.planejamento_financeiro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "642814652841-8ujpaeti2oh6t0cii4ucdu3ol3ncgckk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9XLs08tJLkTHtCH5UOQnBGfRLU0tpilw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "642814652841-8ujpaeti2oh6t0cii4ucdu3ol3ncgckk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
