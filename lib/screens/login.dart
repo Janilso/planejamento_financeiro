@@ -32,6 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       final GoogleSignIn googleSignIn = GoogleSignIn(scopes: scopes);
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      // final GoogleSignInAccount? googleUser = await googleSignIn.signOut();
+
       if (googleUser == null) {
         return;
       }
@@ -41,8 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithCredential(credential);
+
       if (!mounted) return;
       if (userCredential.user?.email != null) {
         Navigator.pushReplacement(
@@ -52,6 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (error) {
       // TODO: implement error feedback
+      print("====>>>>>>>>>>>>>>>Errorrr $error");
+      // await FirebaseAuth.instance.signOut();
+      // ;
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(
       //     content: Text('Erro ao fazer login: $error'),

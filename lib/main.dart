@@ -1,13 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:planejamento_financeiro/screens/home.dart';
-import 'firebase_options.dart';
-import 'package:flutter/material.dart';
 import 'package:planejamento_financeiro/screens/splash.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
+
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,8 +26,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Planejamento financeiro',
       theme: AppTheme.defaultTheme,
-      // home: const SplashScreen(),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
+      // home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
