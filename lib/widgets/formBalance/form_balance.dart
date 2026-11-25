@@ -54,7 +54,7 @@ class _FormBalanceState extends State<FormBalance> {
     };
   }
 
-  _onSubmit() async {
+  Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       if (widget.onSubmit != null) {
         final data = _formKey.currentState!.instantValue;

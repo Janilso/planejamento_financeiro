@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/extensions/string.dart';
@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  getMoths(
+  List<DateTime> getMoths(
     int quantidade,
     DateTime date, {
     bool prev = false,
@@ -111,13 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
     ).toUpperCase().replaceAll('.', '');
   }
 
-  _handleChangeBalance(String typeBalance) {
+  void _handleChangeBalance(String typeBalance) {
     setState(() {
       typeBalancePage = typeBalance;
     });
   }
 
-  _handleChangeMonth([int index = 0]) {
+  void _handleChangeMonth([int index = 0]) {
     List<DateTime> newMonths = months;
     int newInitialIndex = index;
     DateTime actualMonth = months[index];
@@ -147,14 +147,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  _onSubmitCreate(BalanceModel balance) async {
+  Future<void> _onSubmitCreate(BalanceModel balance) async {
     final res = await _balanceRepository.createBalance(
       balance.copyWith(date: months[actualIndex]).toMap(),
     );
     print("===========>data ${res.months["JAN/25"]?.gains.first}");
   }
 
-  _onSubmitEdit(BalanceModel balance) async {
+  Future<void> _onSubmitEdit(BalanceModel balance) async {
     final res = await _balanceRepository.editBalance(
       balance.copyWith(date: months[actualIndex]).toMap(),
     );

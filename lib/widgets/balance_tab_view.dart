@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance/balance.dart';
@@ -37,7 +37,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
       ..addListener(_handleChangePage);
   }
 
-  _handleChangePage() {
+  void _handleChangePage() {
     if (widget.onTabChanged != null) {
       widget.onTabChanged!(
         _tabController.index == 0 ? TypeBalance.gains : TypeBalance.expenses,

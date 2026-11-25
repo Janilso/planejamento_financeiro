@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:planejamento_financeiro/main.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:planejamento_financeiro/theme/theme.dart';
+import 'package:planejamento_financeiro/widgets/button.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  Widget wrap(Widget child) => MaterialApp(
+    theme: AppTheme.defaultTheme,
+    home: Scaffold(body: child),
+  );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('AppButton mostra o texto e chama onPressed', (tester) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      wrap(AppButton(text: 'ENTRAR', onPressed: () => pressed++)),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.text('ENTRAR'), findsOneWidget);
+    await tester.tap(find.byType(ElevatedButton));
+    expect(pressed, 1);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('AppButton em loading não chama onPressed', (tester) async {
+    var pressed = 0;
+    await tester.pumpWidget(
+      wrap(
+        AppButton(text: 'ENTRAR', loading: true, onPressed: () => pressed++),
+      ),
+    );
+
+    expect(find.text('ENTRAR'), findsNothing);
+    await tester.tap(find.byType(ElevatedButton), warnIfMissed: false);
+    expect(pressed, 0);
   });
 }
