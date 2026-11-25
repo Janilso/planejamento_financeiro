@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'dart:math' as math;
 
@@ -38,7 +38,7 @@ class _AppLoadState extends State<AppLoad> with SingleTickerProviderStateMixin {
       height: size,
       child: AnimatedBuilder(
         animation: _animationController,
-        builder: (_, __) {
+        builder: (_, _) {
           final offsetTween =
               Tween<Offset>(begin: Offset(0, -size), end: Offset.zero).chain(
                 CurveTween(

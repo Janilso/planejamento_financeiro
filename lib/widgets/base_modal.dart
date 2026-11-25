@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 
 void baseModal(BuildContext context, [Widget? child]) {
@@ -37,7 +37,7 @@ void baseModal(BuildContext context, [Widget? child]) {
               ),
             ),
             const SizedBox(height: 12),
-            if (child != null) child,
+            ?child,
           ],
         ),
       ),
