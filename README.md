@@ -2,7 +2,7 @@
 
 App Android pessoal para controlar ganhos e gastos mês a mês. Você entra com a conta Google e lança valores à vista ou parcelados (até 30x). Cada mês mostra o resumo de ganhos, gastos e balanço. Os dados ficam na API [planejamento_financeiro_api](https://github.com/Janilso/planejamento_financeiro_api).
 
-Como o app e a API funcionam por dentro: [docs/funcionamento-app-e-api.md](docs/funcionamento-app-e-api.md).
+Documentação técnica (arquitetura, sessão, home, dados, testes e ambiente): [docs/README.md](docs/README.md). O contrato da API está no Swagger dela, em `/docs`.
 
 ## Requisitos
 

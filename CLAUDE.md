@@ -1,6 +1,6 @@
 # App do Planejamento Financeiro
 
-App Flutter (Android) pessoal e simples para controlar ganhos e gastos mês a mês. A API fica em `/home/janilso/projetos/backend/planejamento_financeiro_api`. O funcionamento dos dois está em `docs/funcionamento-app-e-api.md`, e o plano de correções em `docs/superpowers/plans/`.
+App Flutter (Android) pessoal e simples para controlar ganhos e gastos mês a mês. A API fica em `/home/janilso/projetos/backend/planejamento_financeiro_api`. A documentação técnica está em `docs/` (índice em `docs/README.md`), o contrato da API no Swagger dela (`/docs`) e os planos em `docs/superpowers/plans/`.
 
 ## Comandos
 
@@ -15,6 +15,7 @@ App Flutter (Android) pessoal e simples para controlar ganhos e gastos mês a m�
 - TDD com `flutter_test` e dublês escritos à mão (sem libs de mock).
 - O `AppLoad` tem animação infinita: nos testes de widget, use `pump()` enquanto ele estiver na tela.
 - Antes de cada commit, pare e deixe o usuário revisar o código e testar no celular.
+- Atualize o arquivo de `docs/` do assunto junto com a mudança.
 
 ## Armadilhas
 
