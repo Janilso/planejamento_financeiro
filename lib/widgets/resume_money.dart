@@ -24,9 +24,8 @@ class ResumeMoney extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 4),
         child: Text(
           label.toUpperCase(),
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.whiteDesable),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: AppColors.whiteDesable),
           textAlign: center ? TextAlign.center : TextAlign.start,
         ),
       ),
@@ -37,9 +36,8 @@ class ResumeMoney extends StatelessWidget {
                 fontSize: 32,
                 fontWeight: FontWeight.w600,
               )
-            : Theme.of(
-                context,
-              ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
+            : Theme.of(context).textTheme.titleLarge!
+                  .copyWith(fontWeight: FontWeight.w600),
         textAlign: center ? TextAlign.center : TextAlign.start,
       ),
     );

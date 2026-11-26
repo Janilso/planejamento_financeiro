@@ -60,9 +60,8 @@ class Balance extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       title: Text(
         name.capitalize(),
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium!.copyWith(color: AppColors.black),
+        style: Theme.of(context).textTheme.bodyMedium!
+            .copyWith(color: AppColors.black),
       ),
       trailing: Text(
         AppFormats.valueToMoney(value),

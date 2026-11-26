@@ -53,9 +53,9 @@ class AppButton extends StatelessWidget {
           backgroundColor: isLight ? AppColors.white : backgroundColor,
           disabledBackgroundColor: isLight
               ? AppColors.white.withAlpha(200)
-              : HSLColor.fromColor(
-                  backgroundColor!,
-                ).withLightness((0.85).clamp(0.0, 1.0)).toColor(),
+              : HSLColor.fromColor(backgroundColor!)
+                    .withLightness((0.85).clamp(0.0, 1.0))
+                    .toColor(),
         ),
         label: _buildText(
           color: isLight ? AppColors.primary : AppColors.white,

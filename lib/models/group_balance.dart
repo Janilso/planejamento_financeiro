@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:planejamento_financeiro/models/balance.dart';
 
 class GroupBalanceModel {
