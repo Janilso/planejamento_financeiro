@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 
+// Estilos de texto em WorkSans, com tamanhos reais em sp
+// (docs/tema-e-layout.md). O padrão é o texto principal escuro.
 class AppTextsStyle extends TextStyle {
   const AppTextsStyle({
     super.inherit,
@@ -28,17 +30,30 @@ class AppTextsStyle extends TextStyle {
     super.height,
   }) : super(fontFamily: "WorkSans");
 
-  static final double _sizeScale = 0.9;
-
-  static AppTextsStyle titleLarge({
-    Color? color = AppColors.white,
+  static AppTextsStyle displaySmall({
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.2,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 24 / _sizeScale,
+      fontSize: 36,
+      fontWeight: fontWeight,
+      height: height,
+      decoration: decoration,
+    );
+  }
+
+  static AppTextsStyle titleLarge({
+    Color? color = AppColors.black,
+    FontWeight fontWeight = FontWeight.w400,
+    double? height = 1.2,
+    TextDecoration? decoration,
+  }) {
+    return AppTextsStyle(
+      color: color,
+      fontSize: 26,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -46,14 +61,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle titleMedium({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.25,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 20 / _sizeScale,
+      fontSize: 22,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -61,14 +76,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle titleSmall({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.3,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 18 / _sizeScale,
+      fontSize: 20,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -76,14 +91,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle bodyLarge({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.3,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 16 / _sizeScale,
+      fontSize: 18,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -91,14 +106,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle bodyMedium({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.5,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 14 / _sizeScale,
+      fontSize: 16,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -106,14 +121,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle bodySmall({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.4,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 12 / _sizeScale,
+      fontSize: 13,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -121,14 +136,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle labelLarge({
-    Color? color = AppColors.white,
-    FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    Color? color = AppColors.black,
+    FontWeight fontWeight = FontWeight.w600,
+    double? height = 1.25,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 10 / _sizeScale,
+      fontSize: 16,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -136,14 +151,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle labelMedium({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.4,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 8 / _sizeScale,
+      fontSize: 14,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,
@@ -151,30 +166,14 @@ class AppTextsStyle extends TextStyle {
   }
 
   static AppTextsStyle labelSmall({
-    Color? color = AppColors.white,
+    Color? color = AppColors.black,
     FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
+    double? height = 1.4,
     TextDecoration? decoration,
   }) {
     return AppTextsStyle(
       color: color,
-      fontSize: 6 / _sizeScale,
-      fontWeight: fontWeight,
-      height: height,
-      decoration: decoration,
-    );
-  }
-
-  static AppTextsStyle customSize({
-    Color? color = AppColors.white,
-    FontWeight fontWeight = FontWeight.w400,
-    double? height = 1,
-    TextDecoration? decoration,
-    double? fontSize,
-  }) {
-    return AppTextsStyle(
-      color: color,
-      fontSize: (fontSize ?? 10) / _sizeScale,
+      fontSize: 12,
       fontWeight: fontWeight,
       height: height,
       decoration: decoration,

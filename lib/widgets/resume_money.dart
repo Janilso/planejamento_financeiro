@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
-import 'package:planejamento_financeiro/theme/texts_style.dart';
 
 class ResumeMoney extends StatelessWidget {
   final String label;
@@ -32,12 +31,12 @@ class ResumeMoney extends StatelessWidget {
       subtitle: Text(
         AppFormats.valueToMoney(value),
         style: center
-            ? AppTextsStyle.customSize(
-                fontSize: 32,
+            ? Theme.of(context).textTheme.displaySmall!
+                  .copyWith(fontWeight: FontWeight.w600, color: AppColors.white)
+            : Theme.of(context).textTheme.titleLarge!.copyWith(
                 fontWeight: FontWeight.w600,
-              )
-            : Theme.of(context).textTheme.titleLarge!
-                  .copyWith(fontWeight: FontWeight.w600),
+                color: AppColors.white,
+              ),
         textAlign: center ? TextAlign.center : TextAlign.start,
       ),
     );

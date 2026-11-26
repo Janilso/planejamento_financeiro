@@ -21,6 +21,7 @@ class AppTheme {
   static ThemeData darkTheme = ThemeData.dark(useMaterial3: true);
 
   static TextTheme textTheme = TextTheme(
+    displaySmall: AppTextsStyle.displaySmall(),
     titleLarge: AppTextsStyle.titleLarge(),
     titleMedium: AppTextsStyle.titleMedium(),
     titleSmall: AppTextsStyle.titleSmall(),
