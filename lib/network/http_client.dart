@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:planejamento_financeiro/network/api_config.dart';
 
 class DioFactory {
   static Dio instance() => Dio(
     BaseOptions(
-      baseUrl: "https://jsonplaceholder.typicode.com",
+      baseUrl: apiUrl,
       connectTimeout: const Duration(seconds: 20),
       receiveTimeout: const Duration(seconds: 20),
       headers: {Headers.contentTypeHeader: "application/json"},
@@ -19,7 +21,11 @@ class HttpClient {
 
   Future<ClientResponse> get(ClientRequest request) async {
     try {
-      final response = await _client.get(request.url);
+      final response = await _client.get(
+        request.url,
+        queryParameters: request.params,
+        options: Options(headers: request.headers),
+      );
       return _buildResponse(response);
     } on DioException catch (e) {
       throw _buildException(e);
@@ -31,6 +37,7 @@ class HttpClient {
       final response = await _client.post(
         request.url,
         data: request.body,
+        queryParameters: request.params,
         options: Options(headers: request.headers),
       );
       return _buildResponse(response);
@@ -44,6 +51,21 @@ class HttpClient {
       final response = await _client.put(
         request.url,
         data: request.body,
+        queryParameters: request.params,
+        options: Options(headers: request.headers),
+      );
+      return _buildResponse(response);
+    } on DioException catch (e) {
+      throw _buildException(e);
+    }
+  }
+
+  Future<ClientResponse> patch(ClientRequest request) async {
+    try {
+      final response = await _client.patch(
+        request.url,
+        data: request.body,
+        queryParameters: request.params,
         options: Options(headers: request.headers),
       );
       return _buildResponse(response);
@@ -57,6 +79,7 @@ class HttpClient {
       final response = await _client.delete(
         request.url,
         data: request.body,
+        queryParameters: request.params,
         options: Options(headers: request.headers),
       );
       return _buildResponse(response);

@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
@@ -51,3 +55,40 @@ Map<String, dynamic> balanceJson(
   'totalInstallments': 1,
   'date': date,
 };
+
+// Adaptador falso do Dio: registra as requisições e devolve respostas programadas.
+class FakeHttpAdapter implements HttpClientAdapter {
+  FakeHttpAdapter([List<FakeResponse>? responses])
+    : responses = responses ?? [];
+
+  final List<FakeResponse> responses;
+  final List<RequestOptions> requests = [];
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    requests.add(options);
+    final next = responses.isNotEmpty
+        ? responses.removeAt(0)
+        : const FakeResponse(200, {});
+    return ResponseBody.fromString(
+      jsonEncode(next.body),
+      next.status,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
+class FakeResponse {
+  const FakeResponse(this.status, this.body);
+  final int status;
+  final Object body;
+}
