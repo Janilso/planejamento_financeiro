@@ -99,25 +99,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onSubmitCreate(BalanceModel balance) async {
-    final res = await _balanceRepository.createBalance(
-      balance
-          .copyWith(
-            date: dateForNewBalance(months[actualIndex], DateTime.now()),
-          )
-          .toMap(),
+    await _balanceRepository.createBalance(
+      balance.copyWith(
+        date: dateForNewBalance(months[actualIndex], DateTime.now()),
+      ),
     );
-    print("===========>data ${res.months["JAN/25"]?.gains.first}");
+    _reloadBalances();
   }
 
   Future<void> _onSubmitEdit(BalanceModel balance) async {
-    final res = await _balanceRepository.editBalance(
-      balance
-          .copyWith(
-            date: dateForNewBalance(months[actualIndex], DateTime.now()),
-          )
-          .toMap(),
-    );
-    print("===========>data ${res.months["JAN/25"]?.gains.first}");
+    await _balanceRepository.updateBalance(balance.id ?? '', {
+      'name': balance.name,
+      'value': balance.value,
+      'totalInstallments': balance.totalInstallments,
+      'realized': balance.realized,
+    });
+    _reloadBalances();
   }
 
   @override

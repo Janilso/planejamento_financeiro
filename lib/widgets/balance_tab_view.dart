@@ -12,7 +12,7 @@ class BalanceTabView extends StatefulWidget {
   final List<BalanceModel> gainBalances;
   final List<BalanceModel> expensesBalances;
   final Function(String typeBalance)? onTabChanged;
-  final Function(BalanceModel balance)? onSubmit;
+  final Future<void> Function(BalanceModel balance)? onSubmit;
 
   const BalanceTabView({
     super.key,

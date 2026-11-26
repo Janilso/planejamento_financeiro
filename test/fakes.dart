@@ -1,3 +1,4 @@
+import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
 
@@ -7,7 +8,10 @@ class FakeBalanceRepository implements BalanceRepository {
 
   Map<String, dynamic>? data;
   Object? error;
+  Object? saveError;
   int getCalls = 0;
+  int createCalls = 0;
+  double? lastCreatedValue;
 
   @override
   dynamic get res => null;
@@ -20,12 +24,16 @@ class FakeBalanceRepository implements BalanceRepository {
   }
 
   @override
-  Future<MonthBalanceModel> createBalance(Map<String, dynamic> data) async =>
-      getBalances();
+  Future<void> createBalance(BalanceModel balance) async {
+    createCalls++;
+    lastCreatedValue = balance.value;
+    if (saveError != null) throw saveError!;
+  }
 
   @override
-  Future<MonthBalanceModel> editBalance(Map<String, dynamic> data) async =>
-      getBalances();
+  Future<void> updateBalance(String id, Map<String, dynamic> fields) async {
+    if (saveError != null) throw saveError!;
+  }
 }
 
 Map<String, dynamic> balanceJson(
@@ -34,7 +42,7 @@ Map<String, dynamic> balanceJson(
   String type, {
   String date = '2026-11-15T12:00:00.000',
 }) => {
-  'uuid': 'id-$name',
+  'id': 'id-$name',
   'name': name,
   'value': value,
   'realized': true,

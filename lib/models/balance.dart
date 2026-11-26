@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 class BalanceModel {
-  String? uuid;
+  String? id;
   String name;
   double? value;
   bool realized;
@@ -15,7 +15,7 @@ class BalanceModel {
   bool get isInstallmented => totalInstallments > 1;
 
   BalanceModel({
-    this.uuid,
+    this.id,
     this.name = "",
     this.value,
     this.realized = false,
@@ -29,7 +29,7 @@ class BalanceModel {
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'uuid': uuid,
+      'id': id,
       'name': name,
       'value': value,
       'realized': realized,
@@ -44,7 +44,7 @@ class BalanceModel {
 
   factory BalanceModel.fromMap(Map<String, dynamic> map) {
     return BalanceModel(
-      uuid: map['uuid'] != null ? map['uuid'] as String : null,
+      id: map['id'] != null ? map['id'] as String : null,
       name: map['name'] as String,
       value: map['value'] != null
           ? double.parse(map['value'].toString())
@@ -69,7 +69,7 @@ class BalanceModel {
       BalanceModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   BalanceModel copyWith({
-    String? uuid,
+    String? id,
     String? name,
     double? value,
     bool? realized,
@@ -81,7 +81,7 @@ class BalanceModel {
     DateTime? updatedAt,
   }) {
     return BalanceModel(
-      uuid: uuid ?? this.uuid,
+      id: id ?? this.id,
       name: name ?? this.name,
       value: value ?? this.value,
       realized: realized ?? this.realized,
