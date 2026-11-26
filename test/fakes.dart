@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
+import 'package:planejamento_financeiro/repository/token_storage.dart';
 
 // Repositório falso: devolve os dados programados e conta as chamadas.
 class FakeBalanceRepository implements BalanceRepository {
@@ -91,4 +92,20 @@ class FakeResponse {
   const FakeResponse(this.status, this.body);
   final int status;
   final Object body;
+}
+
+// Armazenamento de tokens em memória (o seguro depende do Android).
+class InMemoryTokenStorage implements TokenStorage {
+  InMemoryTokenStorage([this.tokens]);
+
+  AuthTokens? tokens;
+
+  @override
+  Future<AuthTokens?> read() async => tokens;
+
+  @override
+  Future<void> save(AuthTokens tokens) async => this.tokens = tokens;
+
+  @override
+  Future<void> clear() async => tokens = null;
 }

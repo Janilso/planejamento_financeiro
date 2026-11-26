@@ -5,6 +5,8 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/images.dart';
+import 'package:planejamento_financeiro/repository/auth.dart';
+import 'package:planejamento_financeiro/repository/injector.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
@@ -34,6 +36,18 @@ class _LoginScreenState extends State<LoginScreen> {
         .signInWithCredential(credential);
     if (userCredential.user?.email == null) {
       throw StateError('Login sem e-mail');
+    }
+
+    // Troca o idToken do Google pelos tokens da API. Se a API recusar,
+    // desfaz o login no Firebase e no Google para não ficar meio logado.
+    try {
+      await appInjector.get<AuthRepository>().loginWithGoogleIdToken(
+        googleAuth.idToken ?? '',
+      );
+    } catch (_) {
+      await FirebaseAuth.instance.signOut();
+      await GoogleSignIn.instance.signOut();
+      rethrow;
     }
   }
 
