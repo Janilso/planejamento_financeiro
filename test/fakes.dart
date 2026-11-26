@@ -34,6 +34,7 @@ class FakeBalanceRepository implements BalanceRepository {
 
   @override
   Future<void> updateBalance(String id, Map<String, dynamic> fields) async {
+    calls.add('update $id $fields');
     if (saveError != null) throw saveError!;
   }
 
@@ -70,15 +71,18 @@ Map<String, dynamic> balanceJson(
   String? id,
   int installment = 1,
   int totalInstallments = 1,
+  bool realized = true,
+  double? totalValue,
 }) => {
   'id': id ?? 'id-$name',
   'name': name,
   'value': value,
-  'realized': true,
+  'realized': realized,
   'type': type,
   'installment': installment,
   'totalInstallments': totalInstallments,
   'date': date,
+  'totalValue': ?totalValue,
 };
 
 // Adaptador falso do Dio: registra as requisições e devolve respostas programadas.

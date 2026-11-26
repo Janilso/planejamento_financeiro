@@ -46,17 +46,23 @@ class _FormBalanceState extends State<FormBalance> {
   void initState() {
     super.initState();
 
-    bool haveValue = widget.balanceEdit?.value != null;
+    // Em parcelado, o campo edita o valor do lançamento inteiro, não o da parcela.
+    final edit = widget.balanceEdit;
+    final value = _isInstallmentedEdit
+        ? edit!.totalValue ?? edit.value
+        : edit?.value;
 
     initialValue = {
-      BalanceFields.name: widget.balanceEdit?.name,
-      BalanceFields.value: haveValue
-          ? formatterMoney.formatDouble(widget.balanceEdit!.value!.toDouble())
+      BalanceFields.name: edit?.name,
+      BalanceFields.value: value != null
+          ? formatterMoney.formatDouble(value.toDouble())
           : "",
       BalanceFields.realized: widget.balanceEdit?.realized,
       BalanceFields.totalInstallment: widget.balanceEdit?.totalInstallments,
     };
   }
+
+  bool get _isInstallmentedEdit => widget.balanceEdit?.isInstallmented ?? false;
 
   Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
@@ -129,7 +135,7 @@ class _FormBalanceState extends State<FormBalance> {
           ),
           AppFormField(
             name: BalanceFields.value,
-            label: 'Valor',
+            label: _isInstallmentedEdit ? 'Valor total' : 'Valor',
             typeBalance: widget.typeBalance,
             keyboardType: TextInputType.number,
             validator: FormBuilderValidators.compose([

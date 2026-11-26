@@ -129,13 +129,37 @@ class _HomeScreenState extends State<HomeScreen> {
     _reloadBalances();
   }
 
-  Future<void> _onSubmitEdit(BalanceModel balance) async {
-    await _balanceRepository.updateBalance(balance.id ?? '', {
-      'name': balance.name,
-      'value': balance.value,
-      'totalInstallments': balance.totalInstallments,
-      'realized': balance.realized,
-    });
+  // Manda à API só o que mudou. A data não vai: editar não muda o mês.
+  // Em parcelado, o valor do formulário é o total e o "realizado" é por parcela.
+  Future<void> _onSubmitEdit(BalanceModel original, BalanceModel edited) async {
+    final id = original.id!;
+    final fields = <String, dynamic>{
+      if (edited.name != original.name) 'name': edited.name,
+      if (edited.value != (original.totalValue ?? original.value))
+        'value': edited.value,
+      if (edited.totalInstallments != original.totalInstallments)
+        'totalInstallments': edited.totalInstallments,
+    };
+    final realizedChanged = edited.realized != original.realized;
+    final realizedPerInstallment =
+        original.isInstallmented && edited.isInstallmented;
+    if (realizedChanged && !realizedPerInstallment) {
+      fields['realized'] = edited.realized;
+    }
+
+    if (fields.isNotEmpty) {
+      await _balanceRepository.updateBalance(id, fields);
+    }
+    // Se a parcela deixou de existir (menos parcelas), não há o que marcar.
+    if (realizedChanged &&
+        realizedPerInstallment &&
+        original.installment <= edited.totalInstallments) {
+      await _balanceRepository.setInstallmentRealized(
+        id,
+        original.installment,
+        edited.realized,
+      );
+    }
     _reloadBalances();
   }
 
@@ -246,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           gainBalances: data?.gains ?? [],
                           expensesBalances: data?.expenses ?? [],
                           onTabChanged: _handleChangeBalance,
-                          onSubmit: _onSubmitEdit,
+                          onEdit: _onSubmitEdit,
                           onDelete: _onDelete,
                         ),
                       ),

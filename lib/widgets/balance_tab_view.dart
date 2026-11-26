@@ -12,7 +12,8 @@ class BalanceTabView extends StatefulWidget {
   final List<BalanceModel> gainBalances;
   final List<BalanceModel> expensesBalances;
   final Function(String typeBalance)? onTabChanged;
-  final Future<void> Function(BalanceModel balance)? onSubmit;
+  final Future<void> Function(BalanceModel original, BalanceModel edited)?
+  onEdit;
   // onlyInstallment: true exclui só a parcela; false, o lançamento inteiro.
   final Future<void> Function(BalanceModel balance, {bool onlyInstallment})?
   onDelete;
@@ -22,7 +23,7 @@ class BalanceTabView extends StatefulWidget {
     this.gainBalances = const [],
     this.expensesBalances = const [],
     this.onTabChanged,
-    this.onSubmit,
+    this.onEdit,
     this.onDelete,
   });
 
@@ -211,7 +212,9 @@ class _BalanceTabViewState extends State<BalanceTabView>
                     FormBalance(
                       typeBalance: balance.type,
                       balanceEdit: balance,
-                      onSubmit: widget.onSubmit,
+                      onSubmit: widget.onEdit == null
+                          ? null
+                          : (edited) => widget.onEdit!(balance, edited),
                     ),
                   ),
                   name: balance.isInstallmented

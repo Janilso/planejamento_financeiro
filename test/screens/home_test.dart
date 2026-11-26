@@ -214,4 +214,73 @@ void main() {
       expect(find.text('Não foi possível excluir'), findsOneWidget);
     });
   });
+
+  group('editar parcelado', () {
+    FakeBalanceRepository repoWithTv() => FakeBalanceRepository(
+      data: {
+        'NOV/26': {
+          'gains': [
+            balanceJson(
+              'TV',
+              1000,
+              'gains',
+              id: 'abc',
+              installment: 2,
+              totalInstallments: 3,
+              realized: false,
+              totalValue: 3000,
+            ),
+          ],
+          'expenses': [],
+        },
+      },
+    );
+
+    Finder field(String name) => find.byWidgetPredicate(
+      (w) => w is FormBuilderTextField && w.name == name,
+    );
+
+    Future<void> openTv(WidgetTester tester) async {
+      await tester.tap(find.text('TV - 2/3'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> save(WidgetTester tester) async {
+      await tester.tap(find.text('Salvar'));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    testWidgets('mostra o valor total', (tester) async {
+      await pumpHome(tester, repoWithTv());
+      await openTv(tester);
+
+      expect(find.text('Valor total'), findsOneWidget);
+      expect(find.textContaining('3.000,00'), findsOneWidget);
+    });
+
+    testWidgets('marcar realizado altera só a parcela', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await openTv(tester);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+      await save(tester);
+
+      expect(repo.calls, ['realized abc 2 true']);
+    });
+
+    testWidgets('editar o nome altera o lançamento', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await openTv(tester);
+
+      await tester.enterText(field('name'), 'Televisão');
+      await save(tester);
+
+      expect(repo.calls, ['update abc {name: Televisão}']);
+    });
+  });
 }
