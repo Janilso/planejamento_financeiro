@@ -13,6 +13,9 @@ class BalanceTabView extends StatefulWidget {
   final List<BalanceModel> expensesBalances;
   final Function(String typeBalance)? onTabChanged;
   final Future<void> Function(BalanceModel balance)? onSubmit;
+  // onlyInstallment: true exclui só a parcela; false, o lançamento inteiro.
+  final Future<void> Function(BalanceModel balance, {bool onlyInstallment})?
+  onDelete;
 
   const BalanceTabView({
     super.key,
@@ -20,6 +23,7 @@ class BalanceTabView extends StatefulWidget {
     this.expensesBalances = const [],
     this.onTabChanged,
     this.onSubmit,
+    this.onDelete,
   });
 
   @override
@@ -29,6 +33,61 @@ class BalanceTabView extends StatefulWidget {
 class _BalanceTabViewState extends State<BalanceTabView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  // Itens já excluídos na API: saem da lista até a recarga chegar, porque o
+  // Dismissible não pode continuar na árvore depois do arraste.
+  final Set<String> _removed = {};
+
+  String _keyOf(BalanceModel b) => '${b.id}-${b.installment}';
+
+  @override
+  void didUpdateWidget(covariant BalanceTabView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.gainBalances != widget.gainBalances ||
+        oldWidget.expensesBalances != widget.expensesBalances) {
+      _removed.clear();
+    }
+  }
+
+  Future<bool> _confirmDelete(BalanceModel balance) async {
+    final onlyInstallment = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Excluir "${balance.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          if (balance.isInstallmented) ...[
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Todas as parcelas'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Só esta parcela'),
+            ),
+          ] else
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Excluir'),
+            ),
+        ],
+      ),
+    );
+    if (onlyInstallment == null || widget.onDelete == null) return false;
+    try {
+      await widget.onDelete!(balance, onlyInstallment: onlyInstallment);
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Não foi possível excluir')),
+        );
+      }
+      return false;
+    }
+  }
 
   @override
   void initState() {
@@ -100,6 +159,9 @@ class _BalanceTabViewState extends State<BalanceTabView>
     List<BalanceModel> balances, [
     bool isGain = true,
   ]) {
+    final visible = balances
+        .where((b) => !_removed.contains(_keyOf(b)))
+        .toList();
     // Material (e não Container) para o efeito de toque dos ListTile aparecer.
     return Material(
       color: AppColors.white,
@@ -108,11 +170,11 @@ class _BalanceTabViewState extends State<BalanceTabView>
       child: ListView.builder(
         scrollDirection: Axis.vertical,
         shrinkWrap: true,
-        itemCount: balances.length,
+        itemCount: visible.length,
         itemBuilder: (_, index) {
-          BalanceModel balance = balances[index];
+          BalanceModel balance = visible[index];
           return Dismissible(
-            key: UniqueKey(),
+            key: ValueKey(_keyOf(balance)),
             direction: DismissDirection.endToStart,
             background: Container(
               decoration: BoxDecoration(
@@ -139,7 +201,8 @@ class _BalanceTabViewState extends State<BalanceTabView>
                 ),
               ),
             ),
-            onDismissed: (_) {},
+            confirmDismiss: (_) => _confirmDelete(balance),
+            onDismissed: (_) => setState(() => _removed.add(_keyOf(balance))),
             child: Column(
               children: [
                 Balance(
@@ -158,7 +221,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
                   isDanger: !isGain,
                   isDot: !balance.realized,
                 ),
-                if (index != balances.length)
+                if (index != visible.length)
                   const Divider(color: AppColors.grayLight, height: 0),
               ],
             ),

@@ -143,4 +143,75 @@ void main() {
     await tester.pumpAndSettle();
     expect(logouts, 1);
   });
+
+  group('arrastar para excluir', () {
+    FakeBalanceRepository repoWithTv() => FakeBalanceRepository(
+      data: {
+        'NOV/26': {
+          'gains': [
+            balanceJson(
+              'TV',
+              100,
+              'gains',
+              id: 'abc',
+              installment: 2,
+              totalInstallments: 3,
+            ),
+          ],
+          'expenses': [],
+        },
+      },
+    );
+
+    Future<void> swipeTv(WidgetTester tester) async {
+      await tester.drag(find.text('TV - 2/3'), const Offset(-700, 0));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('só esta parcela', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await swipeTv(tester);
+
+      await tester.tap(find.text('Só esta parcela'));
+      await tester.pumpAndSettle();
+
+      expect(repo.calls, ['deleteInstallment abc 2']);
+    });
+
+    testWidgets('todas as parcelas', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await swipeTv(tester);
+
+      await tester.tap(find.text('Todas as parcelas'));
+      await tester.pumpAndSettle();
+
+      expect(repo.calls, ['deleteBalance abc']);
+    });
+
+    testWidgets('cancelar mantém o item', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await swipeTv(tester);
+
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      expect(repo.calls, isEmpty);
+      expect(find.text('TV - 2/3'), findsOneWidget);
+    });
+
+    testWidgets('falha na API mantém o item e avisa', (tester) async {
+      final repo = repoWithTv()..saveError = Exception('sem rede');
+      await pumpHome(tester, repo);
+      await swipeTv(tester);
+
+      await tester.tap(find.text('Só esta parcela'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('TV - 2/3'), findsOneWidget);
+      expect(find.text('Não foi possível excluir'), findsOneWidget);
+    });
+  });
 }

@@ -114,6 +114,21 @@ class _HomeScreenState extends State<HomeScreen> {
     _reloadBalances();
   }
 
+  Future<void> _onDelete(
+    BalanceModel balance, {
+    bool onlyInstallment = false,
+  }) async {
+    if (onlyInstallment) {
+      await _balanceRepository.deleteInstallment(
+        balance.id!,
+        balance.installment,
+      );
+    } else {
+      await _balanceRepository.deleteBalance(balance.id!);
+    }
+    _reloadBalances();
+  }
+
   Future<void> _onSubmitEdit(BalanceModel balance) async {
     await _balanceRepository.updateBalance(balance.id ?? '', {
       'name': balance.name,
@@ -232,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           expensesBalances: data?.expenses ?? [],
                           onTabChanged: _handleChangeBalance,
                           onSubmit: _onSubmitEdit,
+                          onDelete: _onDelete,
                         ),
                       ),
                     ],

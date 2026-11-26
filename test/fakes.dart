@@ -67,14 +67,17 @@ Map<String, dynamic> balanceJson(
   double value,
   String type, {
   String date = '2026-11-15T12:00:00.000',
+  String? id,
+  int installment = 1,
+  int totalInstallments = 1,
 }) => {
-  'id': 'id-$name',
+  'id': id ?? 'id-$name',
   'name': name,
   'value': value,
   'realized': true,
   'type': type,
-  'installment': 1,
-  'totalInstallments': 1,
+  'installment': installment,
+  'totalInstallments': totalInstallments,
   'date': date,
 };
 
