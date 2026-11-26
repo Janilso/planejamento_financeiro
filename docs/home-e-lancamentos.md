@@ -1,0 +1,73 @@
+# Home e lançamentos
+
+## Layout
+
+```
+┌────────────────────────────────────┐
+│       GANHOS - Novembro 2026   [⇥] │  barra do topo e botão Sair
+│  OUT/26   NOV/26   DEZ/26   JAN/27 │  abas de meses, infinitas
+│  GANHOS R$ 1.900   GASTOS R$ 1.800 │
+│          BALANÇO R$ 100            │  resumo do mês
+│        GANHOS   |   GASTOS         │  abas por tipo
+│  ● TV - 2/3            R$ 33,33    │  ● = ainda não realizado
+│    Salário           R$ 1.500,00   │
+│                                (+) │  novo lançamento
+└────────────────────────────────────┘
+```
+
+A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
+
+## Meses (`lib/commons/months.dart`)
+
+- **Sempre no dia 1.** Manter o dia de hoje (31, por exemplo) faria o `DateTime` pular para o mês seguinte e repetir ou sumir meses.
+- `monthsAround(hoje)` monta 12 meses para trás, o atual e 12 para frente.
+- **Abas infinitas** (`HomeScreen._handleChangeMonth`): ao chegar a 4 abas de uma das pontas, o app acrescenta mais 12 meses daquele lado (`monthsBefore`/`monthsAfter`) e mantém o mês selecionado.
+- `monthKey(mês)` gera a chave `MMM/yy` em pt-BR, maiúsculas e sem ponto (`NOV/26`), **igual à da API**: é por ela que cada aba acha os seus lançamentos.
+- `dateForNewBalance(mêsDaAba, hoje)`: lançamento novo no mês atual usa a data de hoje; em outro mês, usa o mesmo dia de hoje limitado ao último dia daquele mês (31/01 → 28/02).
+
+## Carregamento (`lib/screens/home.dart`)
+
+- A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
+- Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
+- **Erro na busca:** "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre.
+- **Resumo:** ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
+
+## Lista (`lib/widgets/balance_tab_view.dart`)
+
+- Duas abas, GANHOS e GASTOS. Cada item mostra o nome (com "parcela/total" em parcelado), o valor e um ponto quando ainda não foi realizado.
+- **Tocar** abre o formulário de edição.
+- **Arrastar para a esquerda** pede confirmação:
+
+  | Lançamento | Opções | Chamada |
+  |---|---|---|
+  | Parcelado | "Só esta parcela" | `deleteInstallment(id, parcela)` |
+  | Parcelado | "Todas as parcelas" | `deleteBalance(id)` |
+  | À vista | "Excluir" | `deleteBalance(id)` |
+  | Qualquer um | "Cancelar" | nada; o item volta ao lugar |
+
+- **Se a API falhar**, o item **continua na lista** e aparece "Não foi possível excluir".
+- Depois de uma exclusão que deu certo, o item sai da lista na hora (conjunto `_removed`), antes de a recarga chegar: o Flutter não aceita um `Dismissible` arrastado continuar na árvore. A chave de cada item é `id-parcela`.
+
+## Formulário (`lib/widgets/formBalance/form_balance.dart`)
+
+| Campo | Regra |
+|---|---|
+| Nome | Obrigatório, até 30 caracteres |
+| Valor | Obrigatório, com máscara de R$ (`currency_text_input_formatter`). Em parcelado, o rótulo é **"Valor total"** e o campo começa com o `totalValue` |
+| Realizado | Chave liga/desliga |
+| Parcela(s) | De 1 a 30 |
+
+- O botão "Salvar" fica em carregando e não responde a toques repetidos até a resposta chegar.
+- **Sucesso:** o modal fecha e a lista recarrega.
+- **Erro:** a mensagem aparece **dentro do modal**, acima do botão. Uma SnackBar ficaria escondida atrás dele. A mensagem é a da API (`ApiException`) ou "Não foi possível salvar".
+- **Valores:** `AppFormats.stringMoneyToDouble` converte "R$ 1.234,56" em `1234.56`.
+
+## Criar e editar (`HomeScreen`)
+
+- **Criar** (`_onSubmitCreate`): `POST /balances` com a data de `dateForNewBalance`.
+- **Editar** (`_onSubmitEdit(original, editado)`): compara os dois e manda só o que mudou.
+  - nome, valor total e número de parcelas vão no `updateBalance` (`PATCH /balances/:id`); a data **não** é enviada, então editar não muda o mês;
+  - o **realizado** de um parcelado vai por `setInstallmentRealized(id, parcela, valor)`, só para a parcela aberta; no à vista, vai junto no `updateBalance`;
+  - se nada mudou, a API não é chamada.
+
+Na API, mudar o valor ou o número de parcelas refaz as parcelas, e cada uma mantém o realizado que tinha.
