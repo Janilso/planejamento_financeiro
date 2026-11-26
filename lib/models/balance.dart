@@ -2,7 +2,7 @@
 import 'dart:convert';
 
 class BalanceModel {
-  String? uuid;
+  String? id;
   String name;
   double? value;
   bool realized;
@@ -12,10 +12,12 @@ class BalanceModel {
   DateTime? date;
   DateTime? createdAt;
   DateTime? updatedAt;
-  bool get isInstallmented => installment != totalInstallments;
+  // Valor total do lançamento (em parcelados, a soma de todas as parcelas).
+  double? totalValue;
+  bool get isInstallmented => totalInstallments > 1;
 
   BalanceModel({
-    this.uuid,
+    this.id,
     this.name = "",
     this.value,
     this.realized = false,
@@ -25,11 +27,12 @@ class BalanceModel {
     this.date,
     this.createdAt,
     this.updatedAt,
+    this.totalValue,
   });
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'uuid': uuid,
+      'id': id,
       'name': name,
       'value': value,
       'realized': realized,
@@ -42,9 +45,20 @@ class BalanceModel {
     };
   }
 
+  // Corpo do POST /balances.
+  Map<String, dynamic> toApiMap() => {
+    'name': name,
+    'value': value,
+    'type': type,
+    'installment': 1,
+    'totalInstallments': totalInstallments,
+    'date': (date ?? DateTime.now()).toUtc().toIso8601String(),
+    'realized': realized,
+  };
+
   factory BalanceModel.fromMap(Map<String, dynamic> map) {
     return BalanceModel(
-      uuid: map['uuid'] != null ? map['uuid'] as String : null,
+      id: map['id'] != null ? map['id'] as String : null,
       name: map['name'] as String,
       value: map['value'] != null
           ? double.parse(map['value'].toString())
@@ -60,6 +74,9 @@ class BalanceModel {
       updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'])
           : null,
+      totalValue: map['totalValue'] != null
+          ? double.parse(map['totalValue'].toString())
+          : null,
     );
   }
 
@@ -69,7 +86,7 @@ class BalanceModel {
       BalanceModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   BalanceModel copyWith({
-    String? uuid,
+    String? id,
     String? name,
     double? value,
     bool? realized,
@@ -79,9 +96,10 @@ class BalanceModel {
     DateTime? date,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? totalValue,
   }) {
     return BalanceModel(
-      uuid: uuid ?? this.uuid,
+      id: id ?? this.id,
       name: name ?? this.name,
       value: value ?? this.value,
       realized: realized ?? this.realized,
@@ -91,6 +109,7 @@ class BalanceModel {
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      totalValue: totalValue ?? this.totalValue,
     );
   }
 }

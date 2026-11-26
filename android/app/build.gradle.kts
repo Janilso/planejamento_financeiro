@@ -43,6 +43,12 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // O lintVital do release quebra dentro do próprio Lint (NoSuchMethodError no
+    // módulo firebase_core) e impede gerar o APK. Rode `./gradlew lint` à parte.
+    lint {
+        checkReleaseBuilds = false
+    }
 }
 
 kotlin {

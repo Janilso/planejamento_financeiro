@@ -59,5 +59,4 @@ class DefaultFirebaseOptions {
     projectId: 'planejamento-financeiro-e0a27',
     storageBucket: 'planejamento-financeiro-e0a27.firebasestorage.app',
   );
-
 }

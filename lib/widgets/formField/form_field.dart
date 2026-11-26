@@ -58,23 +58,21 @@ class AppFormField extends StatelessWidget {
               decoration: InputDecoration(
                 fillColor: fillColor,
                 hintText: hintText,
-                hintStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  color: AppColors.black.withAlpha(120),
-                ),
+                hintStyle: Theme.of(context).textTheme.bodyLarge!
+                    .copyWith(color: AppColors.black.withAlpha(120)),
                 labelText: label,
                 labelStyle: WidgetStateTextStyle.resolveWith(
-                  (state) => Theme.of(
-                    context,
-                  ).textTheme.bodyLarge!.copyWith(color: _getLabelColor(state)),
+                  (state) =>
+                      Theme.of(context).textTheme.bodyLarge!
+                          .copyWith(color: _getLabelColor(state)),
                 ),
                 floatingLabelStyle: WidgetStateTextStyle.resolveWith(
-                  (state) => Theme.of(
-                    context,
-                  ).textTheme.bodyLarge!.copyWith(color: _getLabelColor(state)),
+                  (state) =>
+                      Theme.of(context).textTheme.bodyLarge!
+                          .copyWith(color: _getLabelColor(state)),
                 ),
-                errorStyle: Theme.of(
-                  context,
-                ).textTheme.bodySmall!.copyWith(color: AppColors.secondary),
+                errorStyle: Theme.of(context).textTheme.bodySmall!
+                    .copyWith(color: AppColors.secondary),
                 border: _getBorder(),
                 enabledBorder: _getBorder(),
                 focusedBorder: _getBorder(2),
@@ -87,9 +85,8 @@ class AppFormField extends StatelessWidget {
               enabled: enabled,
               cursorColor: _getColorAplha(isDanger),
               textAlign: TextAlign.right,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge!.copyWith(color: _getColorAplha(isDanger)),
+              style: Theme.of(context).textTheme.bodyLarge!
+                  .copyWith(color: _getColorAplha(isDanger)),
             ),
           if (type == TypeInput.switchh)
             Row(
@@ -105,9 +102,8 @@ class AppFormField extends StatelessWidget {
                       name: name,
                       title: Text(
                         label,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge!.copyWith(color: AppColors.black),
+                        style: Theme.of(context).textTheme.bodyLarge!
+                            .copyWith(color: AppColors.black),
                       ),
                       onChanged: onChanged,
                       activeTrackColor: _getColorAplha(isDanger, 150),
@@ -178,13 +174,12 @@ class AppFormField extends StatelessWidget {
                                   keyboardType: TextInputType.number,
                                   readOnly: true,
                                   maxLength: maxLength,
-                                  buildCounter:
-                                      (
-                                        BuildContext context, {
-                                        required int currentLength,
-                                        required bool isFocused,
-                                        required int? maxLength,
-                                      }) => null,
+                                  buildCounter: (
+                                    BuildContext context, {
+                                    required int currentLength,
+                                    required bool isFocused,
+                                    required int? maxLength,
+                                  }) => null,
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
                                     errorText: field.errorText,

@@ -1,10 +1,11 @@
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
-import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
+import 'package:planejamento_financeiro/repository/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
@@ -15,7 +16,7 @@ import 'package:planejamento_financeiro/widgets/formField/form_field.dart';
 class FormBalance extends StatefulWidget {
   final String typeBalance;
   final BalanceModel? balanceEdit;
-  final Function(BalanceModel)? onSubmit;
+  final Future<void> Function(BalanceModel)? onSubmit;
 
   const FormBalance({
     super.key,
@@ -31,6 +32,9 @@ class FormBalance extends StatefulWidget {
 class _FormBalanceState extends State<FormBalance> {
   final _formKey = GlobalKey<FormBuilderState>();
   AutovalidateMode _autovalidate = AutovalidateMode.disabled;
+  bool _saving = false;
+  // Erro mostrado dentro do modal: uma SnackBar ficaria escondida atrás dele.
+  String? _error;
   late Map<String, dynamic> initialValue;
   final formatterMoney = CurrencyTextInputFormatter.currency(
     locale: 'pt_BR',
@@ -42,42 +46,62 @@ class _FormBalanceState extends State<FormBalance> {
   void initState() {
     super.initState();
 
-    bool haveValue = widget.balanceEdit?.value != null;
+    // Em parcelado, o campo edita o valor do lançamento inteiro, não o da parcela.
+    final edit = widget.balanceEdit;
+    final value = _isInstallmentedEdit
+        ? edit!.totalValue ?? edit.value
+        : edit?.value;
 
     initialValue = {
-      BalanceFields.name: widget.balanceEdit?.name,
-      BalanceFields.value: haveValue
-          ? formatterMoney.formatDouble(widget.balanceEdit!.value!.toDouble())
+      BalanceFields.name: edit?.name,
+      BalanceFields.value: value != null
+          ? formatterMoney.formatDouble(value.toDouble())
           : "",
       BalanceFields.realized: widget.balanceEdit?.realized,
       BalanceFields.totalInstallment: widget.balanceEdit?.totalInstallments,
     };
   }
 
+  bool get _isInstallmentedEdit => widget.balanceEdit?.isInstallmented ?? false;
+
   Future<void> _onSubmit() async {
     if (_formKey.currentState!.validate()) {
       if (widget.onSubmit != null) {
         final data = _formKey.currentState!.instantValue;
-        widget.onSubmit!(
-          widget.balanceEdit?.copyWith(
-                date: widget.balanceEdit?.date,
-                name: data[BalanceFields.name],
-                totalInstallments: data[BalanceFields.totalInstallment],
-                realized: data[BalanceFields.realized],
-                value: AppFormats.stringMoneyToDouble(
-                  data[BalanceFields.value],
-                ),
-              ) ??
-              BalanceModel(
-                name: data[BalanceFields.name],
-                totalInstallments: data[BalanceFields.totalInstallment] ?? 1,
-                type: widget.typeBalance,
-                realized: data[BalanceFields.realized] ?? false,
-                value: AppFormats.stringMoneyToDouble(
-                  data[BalanceFields.value],
-                ),
-              ),
-        );
+        final balance =
+            widget.balanceEdit?.copyWith(
+              date: widget.balanceEdit?.date,
+              name: data[BalanceFields.name],
+              totalInstallments: data[BalanceFields.totalInstallment],
+              realized: data[BalanceFields.realized],
+              value: AppFormats.stringMoneyToDouble(data[BalanceFields.value]),
+            ) ??
+            BalanceModel(
+              name: data[BalanceFields.name],
+              totalInstallments: data[BalanceFields.totalInstallment] ?? 1,
+              type: widget.typeBalance,
+              realized: data[BalanceFields.realized] ?? false,
+              value: AppFormats.stringMoneyToDouble(data[BalanceFields.value]),
+            );
+
+        setState(() {
+          _saving = true;
+          _error = null;
+        });
+        try {
+          await widget.onSubmit!(balance);
+          if (mounted) Navigator.of(context).pop();
+        } catch (error) {
+          if (mounted) {
+            setState(() {
+              _error = error is ApiException
+                  ? error.message
+                  : 'Não foi possível salvar';
+            });
+          }
+        } finally {
+          if (mounted) setState(() => _saving = false);
+        }
       }
     } else {
       setState(() => _autovalidate = AutovalidateMode.always);
@@ -111,7 +135,7 @@ class _FormBalanceState extends State<FormBalance> {
           ),
           AppFormField(
             name: BalanceFields.value,
-            label: 'Valor',
+            label: _isInstallmentedEdit ? 'Valor total' : 'Valor',
             typeBalance: widget.typeBalance,
             keyboardType: TextInputType.number,
             validator: FormBuilderValidators.compose([
@@ -134,8 +158,19 @@ class _FormBalanceState extends State<FormBalance> {
             maxLength: 30,
           ),
           const SizedBox(height: 32),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: AppColors.secondary),
+              ),
+            ),
           AppButton(
             text: "Salvar",
+            loading: _saving,
             icon: AppIcons.send,
             backgroundColor: widget.typeBalance == TypeBalance.gains
                 ? AppColors.primary
