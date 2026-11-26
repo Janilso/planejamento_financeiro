@@ -20,8 +20,7 @@ class BalanceRepository {
     // final auth = AuthEntity.fromJson(await LocalStorage.get("auth"));
     // const newData
 
-    final response = await _client.get(ClientRequest(url: "/posts"));
-    print("=========> ${response.data}");
+    await _client.get(ClientRequest(url: "/posts"));
     return MonthBalanceModel.fromJson(res);
   }
 }

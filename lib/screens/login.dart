@@ -11,7 +11,10 @@ import 'package:planejamento_financeiro/widgets/button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.signIn});
+
+  // Faz o login e lança erro se não der certo. O padrão é Google + Firebase.
+  final Future<void> Function()? signIn;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -20,49 +23,45 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
 
+  static Future<void> _googleSignIn() async {
+    final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+        .authenticate();
+    final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      idToken: googleAuth.idToken,
+    );
+    final UserCredential userCredential = await FirebaseAuth.instance
+        .signInWithCredential(credential);
+    if (userCredential.user?.email == null) {
+      throw StateError('Login sem e-mail');
+    }
+  }
+
   Future<void> _loginWithGoogle() async {
     try {
       setState(() {
         loading = true;
       });
-      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
-          .authenticate();
-      // await GoogleSignIn.instance.signOut();
-
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
+      await (widget.signIn ?? _googleSignIn)();
 
       if (!mounted) return;
-      if (userCredential.user?.email != null) {
-        Navigator.pushReplacement(
-          context,
-          CupertinoPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        CupertinoPageRoute(builder: (context) => const HomeScreen()),
+      );
     } catch (error) {
       if (error is GoogleSignInException &&
           error.code == GoogleSignInExceptionCode.canceled) {
         return;
       }
-      // TODO: implement error feedback
-      print("====>>>>>>>>>>>>>>>Errorrr $error");
-      // await FirebaseAuth.instance.signOut();
-      // ;
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text('Erro ao fazer login: $error'),
-      //     backgroundColor: AppColors.secondary,
-      //   ),
-      // );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível entrar. Tente de novo.'),
+        ),
+      );
     } finally {
-      setState(() {
-        loading = false;
-      });
+      if (mounted) setState(() => loading = false);
     }
   }
 
