@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
+import 'package:planejamento_financeiro/commons/months.dart';
 import 'package:planejamento_financeiro/extensions/string.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
@@ -72,43 +73,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    months = [
-      ...getMoths(initialNextsPrevsMonths, dateNow, prev: true),
+    months = monthsAround(
       dateNow,
-      ...getMoths(initialNextsPrevsMonths, dateNow),
-    ];
-    actualIndex = months.indexWhere(
-      (date) =>
-          date.year == dateNow.year &&
-          date.month == dateNow.month &&
-          date.day == dateNow.day,
+      before: initialNextsPrevsMonths,
+      after: initialNextsPrevsMonths,
     );
+    actualIndex = _indexOfMonth(months, dateNow);
   }
 
-  List<DateTime> getMoths(
-    int quantidade,
-    DateTime date, {
-    bool prev = false,
-    int skipMonths = 0,
-  }) {
-    List<DateTime> newMonths = [];
-
-    for (int i = 1; i <= quantidade; i++) {
-      DateTime newDate = DateTime(
-        date.year,
-        prev ? date.month - (skipMonths + i) : date.month + (skipMonths + i),
-        date.day,
-      );
-      prev ? newMonths.insert(0, newDate) : newMonths.add(newDate);
-    }
-    return newMonths;
-  }
+  int _indexOfMonth(List<DateTime> list, DateTime month) => list.indexWhere(
+    (date) => date.year == month.year && date.month == month.month,
+  );
 
   String _buildTabBuilder(BuildContext context, int index) {
-    return AppFormats.dateToFormat(
-      months[index],
-      'MMM/yy',
-    ).toUpperCase().replaceAll('.', '');
+    return monthKey(months[index]);
   }
 
   void _handleChangeBalance(String typeBalance) {
@@ -125,20 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isMoreFuture = index >= (months.length - 4);
 
     newMonths = [
-      ...(isMorePast
-          ? getMoths(initialNextsPrevsMonths, months[0], prev: true)
-          : []),
+      ...(isMorePast ? monthsBefore(months[0], initialNextsPrevsMonths) : []),
       ...months,
       ...(isMoreFuture
-          ? getMoths(initialNextsPrevsMonths, months[months.length - 1])
+          ? monthsAfter(months[months.length - 1], initialNextsPrevsMonths)
           : []),
     ];
-    newInitialIndex = newMonths.indexWhere(
-      (date) =>
-          date.year == actualMonth.year &&
-          date.month == actualMonth.month &&
-          date.day == actualMonth.day,
-    );
+    newInitialIndex = _indexOfMonth(newMonths, actualMonth);
 
     setState(() {
       months = newMonths;
@@ -149,14 +120,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _onSubmitCreate(BalanceModel balance) async {
     final res = await _balanceRepository.createBalance(
-      balance.copyWith(date: months[actualIndex]).toMap(),
+      balance
+          .copyWith(
+            date: dateForNewBalance(months[actualIndex], DateTime.now()),
+          )
+          .toMap(),
     );
     print("===========>data ${res.months["JAN/25"]?.gains.first}");
   }
 
   Future<void> _onSubmitEdit(BalanceModel balance) async {
     final res = await _balanceRepository.editBalance(
-      balance.copyWith(date: months[actualIndex]).toMap(),
+      balance
+          .copyWith(
+            date: dateForNewBalance(months[actualIndex], DateTime.now()),
+          )
+          .toMap(),
     );
     print("===========>data ${res.months["JAN/25"]?.gains.first}");
   }
@@ -189,9 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Center(
                     child: Text(
                       '${snapshot.error} occured',
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        color: AppColors.secondary,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge!
+                          .copyWith(color: AppColors.secondary),
                     ),
                   );
                 }
