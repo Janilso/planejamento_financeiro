@@ -58,7 +58,7 @@ class BalanceResume extends StatelessWidget {
             ),
           ],
         ),
-        const Divider(color: AppColors.whiteDesable, thickness: 2),
+        const Divider(color: AppColors.white, thickness: 2),
         Center(
           child: ResumeMoney(
             label: 'balanço',

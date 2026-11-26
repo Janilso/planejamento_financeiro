@@ -25,7 +25,7 @@ class ResumeMoney extends StatelessWidget {
         child: Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: AppColors.whiteDesable),
+              ?.copyWith(color: AppColors.white),
           textAlign: center ? TextAlign.center : TextAlign.start,
         ),
       ),

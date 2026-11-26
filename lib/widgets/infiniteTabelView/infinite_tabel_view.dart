@@ -71,7 +71,7 @@ class InfiniteTabViewState extends State<InfiniteTabView>
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             unselectedLabelStyle: AppTextsStyle.bodyLarge(
-              color: AppColors.whiteDesable,
+              color: AppColors.white,
             ),
             labelStyle: AppTextsStyle.bodyLarge(
               fontWeight: FontWeight.w600,

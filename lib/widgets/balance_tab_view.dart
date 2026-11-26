@@ -128,7 +128,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
                 Tab(text: 'GASTOS'),
               ],
               unselectedLabelStyle: Theme.of(context).textTheme.bodyLarge!
-                  .copyWith(color: AppColors.whiteDesable),
+                  .copyWith(color: AppColors.white),
               labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.white,
