@@ -4,6 +4,7 @@ import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/months.dart';
 import 'package:planejamento_financeiro/extensions/string.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
+import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
@@ -17,58 +18,25 @@ import 'package:planejamento_financeiro/widgets/infiniteTabelView/infinite_tabel
 import 'package:planejamento_financeiro/widgets/load/load.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.repository, this.clock});
+
+  final BalanceRepository? repository;
+  final DateTime Function()? clock;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DateTime dateNow = DateTime.now();
+  late DateTime dateNow = (widget.clock ?? DateTime.now)();
   List<DateTime> months = [];
   int initialNextsPrevsMonths = 12;
   late int actualIndex;
   String typeBalancePage = TypeBalance.gains;
-  final BalanceRepository _balanceRepository = appInjector
-      .get<BalanceRepository>();
-  List<BalanceModel> gainBalances = [
-    BalanceModel(
-      uuid: 'uuid',
-      name: 'Salário',
-      value: 1500,
-      date: DateTime.now(),
-      realized: true,
-      type: TypeBalance.gains,
-      installment: 5,
-      totalInstallments: 12,
-    ),
-    BalanceModel(
-      uuid: 'uuid',
-      name: 'Venda da bicicleta',
-      value: 400,
-      date: DateTime.now(),
-      type: TypeBalance.gains,
-    ),
-  ];
-  List<BalanceModel> expensesBalances = [
-    BalanceModel(
-      uuid: 'uuid',
-      name: 'Apartamento',
-      value: 1300,
-      date: DateTime.now(),
-      realized: true,
-      installment: 1,
-      totalInstallments: 12,
-      type: TypeBalance.expenses,
-    ),
-    BalanceModel(
-      uuid: 'uuid',
-      name: 'Condomínio',
-      value: 500,
-      date: DateTime.now(),
-      type: TypeBalance.expenses,
-    ),
-  ];
+  late final BalanceRepository _balanceRepository =
+      widget.repository ?? appInjector.get<BalanceRepository>();
+  // Uma busca só por carregamento; todas as abas de mês usam o mesmo resultado.
+  late Future<MonthBalanceModel> _balances;
 
   @override
   void initState() {
@@ -79,6 +47,18 @@ class _HomeScreenState extends State<HomeScreen> {
       after: initialNextsPrevsMonths,
     );
     actualIndex = _indexOfMonth(months, dateNow);
+    _balances = _loadBalances();
+  }
+
+  // O erro é tratado pelo FutureBuilder; ignore() evita que ele conte como
+  // não tratado antes de o FutureBuilder começar a ouvir.
+  Future<MonthBalanceModel> _loadBalances() =>
+      _balanceRepository.getBalances()..ignore();
+
+  void _reloadBalances() {
+    setState(() {
+      _balances = _loadBalances();
+    });
   }
 
   int _indexOfMonth(List<DateTime> list, DateTime month) => list.indexWhere(
@@ -162,21 +142,37 @@ class _HomeScreenState extends State<HomeScreen> {
           buildTabBar: _buildTabBuilder,
           buildTabView: (context, index) {
             return FutureBuilder(
-              future: _balanceRepository.getBalances(),
+              future: _balances,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text(
-                      '${snapshot.error} occured',
-                      style: Theme.of(context).textTheme.bodyLarge!
-                          .copyWith(color: AppColors.secondary),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Não foi possível carregar os lançamentos',
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(color: AppColors.white),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: _reloadBalances,
+                          child: Text(
+                            'Tentar de novo',
+                            style: Theme.of(context).textTheme.bodyLarge!
+                                .copyWith(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
                 if (snapshot.hasData) {
-                  final data = snapshot
-                      .data
-                      ?.months[_buildTabBuilder(context, actualIndex)];
+                  // Cada aba lê o próprio mês, não o mês selecionado.
+                  final data = snapshot.data?.months[monthKey(months[index])];
 
                   return Column(
                     children: [

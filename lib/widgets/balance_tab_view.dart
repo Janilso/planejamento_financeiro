@@ -67,9 +67,8 @@ class _BalanceTabViewState extends State<BalanceTabView>
                 Tab(text: 'GANHOS'),
                 Tab(text: 'GASTOS'),
               ],
-              unselectedLabelStyle: Theme.of(
-                context,
-              ).textTheme.bodyLarge!.copyWith(color: AppColors.whiteDesable),
+              unselectedLabelStyle: Theme.of(context).textTheme.bodyLarge!
+                  .copyWith(color: AppColors.whiteDesable),
               labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.white,
@@ -101,11 +100,11 @@ class _BalanceTabViewState extends State<BalanceTabView>
     List<BalanceModel> balances, [
     bool isGain = true,
   ]) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    // Material (e não Container) para o efeito de toque dos ListTile aparecer.
+    return Material(
+      color: AppColors.white,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      clipBehavior: Clip.antiAlias,
       child: ListView.builder(
         scrollDirection: Axis.vertical,
         shrinkWrap: true,
