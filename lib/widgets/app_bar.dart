@@ -7,10 +7,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.preferredSize = const Size.fromHeight(48.0),
     this.isDanger = false,
+    this.actions,
   });
 
   final String title;
   final bool isDanger;
+  final List<Widget>? actions;
 
   @override
   final Size preferredSize;
@@ -22,14 +24,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       preferredSize: preferredSize,
       child: AppBar(
         centerTitle: true,
+        actions: actions,
         backgroundColor: AppColors.white,
         title: Padding(
           padding: const EdgeInsets.only(top: 10, bottom: 5),
           child: Text(
             title,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge!.copyWith(color: color),
+            style: Theme.of(context).textTheme.bodyLarge!
+                .copyWith(color: color),
           ),
         ),
       ),

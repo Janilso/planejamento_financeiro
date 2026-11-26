@@ -4,6 +4,11 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:planejamento_financeiro/commons/images.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:planejamento_financeiro/repository/injector.dart';
+import 'package:planejamento_financeiro/repository/session.dart';
+import 'package:planejamento_financeiro/repository/token_storage.dart';
+import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/load/load.dart';
@@ -24,12 +29,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(milliseconds: 2000), () {
-      Navigator.pushReplacement(
-        context,
-        CupertinoPageRoute(builder: (context) => const LoginScreen()),
-      );
-    });
+    Timer(const Duration(milliseconds: 2000), _openNextScreen);
+  }
+
+  // Com sessão salva (Firebase + tokens da API), vai direto para a home.
+  Future<void> _openNextScreen() async {
+    final loggedIn = await hasSession(
+      isFirebaseSignedIn: () => FirebaseAuth.instance.currentUser != null,
+      storage: appInjector.get<TokenStorage>(),
+    );
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(
+        builder: (context) =>
+            loggedIn ? const HomeScreen() : const LoginScreen(),
+      ),
+    );
   }
 
   @override

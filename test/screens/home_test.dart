@@ -12,7 +12,11 @@ import '../helpers.dart';
 void main() {
   setUpAll(setUpPtBr);
 
-  Future<void> pumpHome(WidgetTester tester, FakeBalanceRepository repo) async {
+  Future<void> pumpHome(
+    WidgetTester tester,
+    FakeBalanceRepository repo, {
+    Future<void> Function()? onLogout,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.defaultTheme,
@@ -22,7 +26,11 @@ void main() {
           ...GlobalMaterialLocalizations.delegates,
           FormBuilderLocalizations.delegate,
         ],
-        home: HomeScreen(repository: repo, clock: () => DateTime(2026, 11, 25)),
+        home: HomeScreen(
+          repository: repo,
+          clock: () => DateTime(2026, 11, 25),
+          onLogout: onLogout,
+        ),
       ),
     );
     await tester.pump();
@@ -112,5 +120,27 @@ void main() {
 
     expect(find.byType(FormBalance), findsOneWidget);
     expect(find.text('Não foi possível salvar'), findsOneWidget);
+  });
+
+  testWidgets('Sair pede confirmação e chama onLogout', (tester) async {
+    var logouts = 0;
+    await pumpHome(
+      tester,
+      FakeBalanceRepository(data: {}),
+      onLogout: () async => logouts++,
+    );
+
+    await tester.tap(find.byTooltip('Sair'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sair da conta?'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(logouts, 0);
+
+    await tester.tap(find.byTooltip('Sair'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Sair'));
+    await tester.pumpAndSettle();
+    expect(logouts, 1);
   });
 }

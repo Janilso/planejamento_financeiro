@@ -1,4 +1,9 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:planejamento_financeiro/repository/auth.dart';
+import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/months.dart';
@@ -18,10 +23,12 @@ import 'package:planejamento_financeiro/widgets/infiniteTabelView/infinite_tabel
 import 'package:planejamento_financeiro/widgets/load/load.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.repository, this.clock});
+  const HomeScreen({super.key, this.repository, this.clock, this.onLogout});
 
   final BalanceRepository? repository;
   final DateTime Function()? clock;
+  // Padrão: sai da API, do Firebase e do Google e volta para o login.
+  final Future<void> Function()? onLogout;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -117,6 +124,38 @@ class _HomeScreenState extends State<HomeScreen> {
     _reloadBalances();
   }
 
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair da conta?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await (widget.onLogout ?? _logout)();
+  }
+
+  Future<void> _logout() async {
+    await appInjector.get<AuthRepository>().logout();
+    await FirebaseAuth.instance.signOut();
+    await GoogleSignIn.instance.signOut();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      CupertinoPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isGainTab = typeBalancePage == TypeBalance.gains;
@@ -129,6 +168,16 @@ class _HomeScreenState extends State<HomeScreen> {
         title:
             "$title - ${AppFormats.dateToFormat(months[actualIndex]).capitalize()}",
         isDanger: !isGainTab,
+        actions: [
+          IconButton(
+            tooltip: 'Sair',
+            icon: Icon(
+              Icons.logout,
+              color: isGainTab ? AppColors.primary : AppColors.secondary,
+            ),
+            onPressed: _confirmLogout,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18),
