@@ -12,7 +12,7 @@ class BalanceModel {
   DateTime? date;
   DateTime? createdAt;
   DateTime? updatedAt;
-  bool get isInstallmented => installment != totalInstallments;
+  bool get isInstallmented => totalInstallments > 1;
 
   BalanceModel({
     this.uuid,
