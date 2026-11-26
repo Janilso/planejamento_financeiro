@@ -11,6 +11,7 @@ App Flutter (Android) para controlar ganhos e gastos mês a mês. A pessoa entra
 | [Arquitetura](arquitetura.md) | Camadas, pastas, injeção de dependência e inicialização |
 | [Autenticação e sessão](autenticacao-e-sessao.md) | Login, tokens, renovação automática, sessão expirada e Sair |
 | [Home e lançamentos](home-e-lancamentos.md) | Meses, abas, lista, formulário, edição e exclusão |
+| [Tema e layout](tema-e-layout.md) | Cores, texto, espaçamento, exceção de contraste e componentes do tema |
 | [Dados e API](dados-e-api.md) | Models, repositório, cliente HTTP e tratamento de erros |
 | [Testes](testes.md) | Dublês, padrões dos testes de widget e CI |
 | [Ambiente](ambiente.md) | Flutter, Firebase, API local, celular por ADB e release |

@@ -39,4 +39,32 @@ void main() {
       expect(s.color, AppColors.black);
     }
   });
+
+  final th = AppTheme.defaultTheme;
+
+  test('esquema de cores da marca', () {
+    expect(th.colorScheme.primary, AppColors.primary);
+    expect(th.colorScheme.error, AppColors.danger);
+    expect(th.colorScheme.onSurface, AppColors.black);
+  });
+
+  test('toque não é mais coral', () {
+    expect(th.splashColor, AppColors.primary.withAlpha(31));
+  });
+
+  test('diálogos, botões de texto, campos, SnackBar e modal', () {
+    expect(th.dialogTheme.titleTextStyle!.fontSize, 20);
+    expect(th.dialogTheme.backgroundColor, AppColors.white);
+    expect(
+      th.textButtonTheme.style!.minimumSize!.resolve({}),
+      const Size(64, 48),
+    );
+    expect(
+      th.inputDecorationTheme.floatingLabelBehavior,
+      FloatingLabelBehavior.always,
+    );
+    expect(th.inputDecorationTheme.errorStyle!.color, AppColors.danger);
+    expect(th.snackBarTheme.behavior, SnackBarBehavior.floating);
+    expect(th.bottomSheetTheme.backgroundColor, AppColors.white);
+  });
 }
