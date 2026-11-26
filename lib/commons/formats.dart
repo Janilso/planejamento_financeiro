@@ -13,12 +13,10 @@ class AppFormats {
     return value.replaceAll(RegExp(r'[^0-9]'), '');
   }
 
+  // "R$ 1.234,56" -> 1234.56: mantém só dígitos e a vírgula decimal, que vira ponto.
   static double stringMoneyToDouble([String value = '']) {
     return double.parse(
-      value
-          .replaceAll('.', '')
-          .replaceAll(',', '.')
-          .replaceAll(RegExp(r'[^0-9]'), ''),
+      value.replaceAll(RegExp(r'[^0-9,]'), '').replaceAll(',', '.'),
     );
   }
 }
