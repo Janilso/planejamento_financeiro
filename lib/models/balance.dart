@@ -12,6 +12,8 @@ class BalanceModel {
   DateTime? date;
   DateTime? createdAt;
   DateTime? updatedAt;
+  // Valor total do lançamento (em parcelados, a soma de todas as parcelas).
+  double? totalValue;
   bool get isInstallmented => totalInstallments > 1;
 
   BalanceModel({
@@ -25,6 +27,7 @@ class BalanceModel {
     this.date,
     this.createdAt,
     this.updatedAt,
+    this.totalValue,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +44,17 @@ class BalanceModel {
       'updatedAt': updatedAt?.millisecondsSinceEpoch,
     };
   }
+
+  // Corpo do POST /balances.
+  Map<String, dynamic> toApiMap() => {
+    'name': name,
+    'value': value,
+    'type': type,
+    'installment': 1,
+    'totalInstallments': totalInstallments,
+    'date': (date ?? DateTime.now()).toUtc().toIso8601String(),
+    'realized': realized,
+  };
 
   factory BalanceModel.fromMap(Map<String, dynamic> map) {
     return BalanceModel(
@@ -59,6 +73,9 @@ class BalanceModel {
           : null,
       updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'])
+          : null,
+      totalValue: map['totalValue'] != null
+          ? double.parse(map['totalValue'].toString())
           : null,
     );
   }
@@ -79,6 +96,7 @@ class BalanceModel {
     DateTime? date,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? totalValue,
   }) {
     return BalanceModel(
       id: id ?? this.id,
@@ -91,6 +109,7 @@ class BalanceModel {
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      totalValue: totalValue ?? this.totalValue,
     );
   }
 }

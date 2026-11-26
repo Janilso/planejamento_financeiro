@@ -5,6 +5,7 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
+import 'package:planejamento_financeiro/repository/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
@@ -32,6 +33,8 @@ class _FormBalanceState extends State<FormBalance> {
   final _formKey = GlobalKey<FormBuilderState>();
   AutovalidateMode _autovalidate = AutovalidateMode.disabled;
   bool _saving = false;
+  // Erro mostrado dentro do modal: uma SnackBar ficaria escondida atrás dele.
+  String? _error;
   late Map<String, dynamic> initialValue;
   final formatterMoney = CurrencyTextInputFormatter.currency(
     locale: 'pt_BR',
@@ -75,15 +78,20 @@ class _FormBalanceState extends State<FormBalance> {
               value: AppFormats.stringMoneyToDouble(data[BalanceFields.value]),
             );
 
-        setState(() => _saving = true);
+        setState(() {
+          _saving = true;
+          _error = null;
+        });
         try {
           await widget.onSubmit!(balance);
           if (mounted) Navigator.of(context).pop();
-        } catch (_) {
+        } catch (error) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Não foi possível salvar')),
-            );
+            setState(() {
+              _error = error is ApiException
+                  ? error.message
+                  : 'Não foi possível salvar';
+            });
           }
         } finally {
           if (mounted) setState(() => _saving = false);
@@ -144,6 +152,16 @@ class _FormBalanceState extends State<FormBalance> {
             maxLength: 30,
           ),
           const SizedBox(height: 32),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: AppColors.secondary),
+              ),
+            ),
           AppButton(
             text: "Salvar",
             loading: _saving,

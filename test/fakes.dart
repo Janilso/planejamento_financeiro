@@ -19,9 +19,6 @@ class FakeBalanceRepository implements BalanceRepository {
   double? lastCreatedValue;
 
   @override
-  dynamic get res => null;
-
-  @override
   Future<MonthBalanceModel> getBalances() async {
     getCalls++;
     if (error != null) throw error!;
@@ -37,6 +34,30 @@ class FakeBalanceRepository implements BalanceRepository {
 
   @override
   Future<void> updateBalance(String id, Map<String, dynamic> fields) async {
+    if (saveError != null) throw saveError!;
+  }
+
+  final List<String> calls = [];
+
+  @override
+  Future<void> setInstallmentRealized(
+    String id,
+    int installment,
+    bool realized,
+  ) async {
+    calls.add('realized $id $installment $realized');
+    if (saveError != null) throw saveError!;
+  }
+
+  @override
+  Future<void> deleteBalance(String id) async {
+    calls.add('deleteBalance $id');
+    if (saveError != null) throw saveError!;
+  }
+
+  @override
+  Future<void> deleteInstallment(String id, int installment) async {
+    calls.add('deleteInstallment $id $installment');
     if (saveError != null) throw saveError!;
   }
 }
