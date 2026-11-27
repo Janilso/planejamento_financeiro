@@ -56,4 +56,4 @@ O `AuthInterceptor` é um `QueuedInterceptor` no Dio da API:
 
 ## Sair
 
-O ícone no topo da home pede confirmação ("Sair da conta?"). Confirmando, `_logout` faz `AuthRepository.logout()`, `FirebaseAuth.signOut()` e `GoogleSignIn.signOut()` e volta ao login, limpando a pilha de telas. Nos testes, o `onLogout` é injetado.
+O menu ⋮ ("Mais opções") no topo da home tem o item "Sair", que pede confirmação ("Sair da conta?"). Confirmando, `_logout` faz `AuthRepository.logout()`, `FirebaseAuth.signOut()` e `GoogleSignIn.signOut()` e volta ao login, limpando a pilha de telas. Nos testes, o `onLogout` é injetado.

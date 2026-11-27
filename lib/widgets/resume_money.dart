@@ -1,45 +1,56 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
-import 'package:planejamento_financeiro/theme/texts_style.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 
+// Rótulo, valor e uma linha de apoio, em branco sobre a cor da marca.
 class ResumeMoney extends StatelessWidget {
   final String label;
   final double value;
   final bool center;
+  final String? hint;
 
   const ResumeMoney({
     super.key,
     required this.label,
     required this.value,
     this.center = false,
+    this.hint,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      title: Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Text(
-          label.toUpperCase(),
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: AppColors.whiteDesable),
-          textAlign: center ? TextAlign.center : TextAlign.start,
+    final textTheme = Theme.of(context).textTheme;
+    final align = center ? TextAlign.center : TextAlign.start;
+    final white = textTheme.bodySmall!.copyWith(color: AppColors.white);
+    return Column(
+      crossAxisAlignment: center
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label.toUpperCase(), style: white, textAlign: align),
+        const SizedBox(height: AppSpacing.xs),
+        // Encolhe em vez de estourar quando o valor é muito grande.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: center ? Alignment.center : Alignment.centerLeft,
+          child: Text(
+            AppFormats.valueToMoney(value),
+            textAlign: align,
+            style: (center ? textTheme.displaySmall! : textTheme.titleLarge!)
+                .copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.white,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+          ),
         ),
-      ),
-      subtitle: Text(
-        AppFormats.valueToMoney(value),
-        style: center
-            ? AppTextsStyle.customSize(
-                fontSize: 32,
-                fontWeight: FontWeight.w600,
-              )
-            : Theme.of(context).textTheme.titleLarge!
-                  .copyWith(fontWeight: FontWeight.w600),
-        textAlign: center ? TextAlign.center : TextAlign.start,
-      ),
+        if (hint != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(hint!, style: white, textAlign: align),
+        ],
+      ],
     );
   }
 }

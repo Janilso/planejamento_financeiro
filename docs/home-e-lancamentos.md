@@ -4,18 +4,23 @@
 
 ```
 ┌────────────────────────────────────┐
-│       GANHOS - Novembro 2026   [⇥] │  barra do topo e botão Sair
-│  OUT/26   NOV/26   DEZ/26   JAN/27 │  abas de meses, infinitas
-│  GANHOS R$ 1.900   GASTOS R$ 1.800 │
-│          BALANÇO R$ 100            │  resumo do mês
+│ OUT/26   NOV/26   DEZ/26   JAN/27 ⋮│  abas de meses, infinitas, e o menu ⋮ (Sair)
+│ GANHOS              GASTOS         │
+│ R$ 1.900,00         R$ 1.800,00    │  resumo do mês
+│ Falta receber R$ 0  Falta pagar …  │  (só quando há algo previsto)
+│          BALANÇO R$ 100            │
 │        GANHOS   |   GASTOS         │  abas por tipo
-│  ● TV - 2/3            R$ 33,33    │  ● = ainda não realizado
-│    Salário           R$ 1.500,00   │
-│                                (+) │  novo lançamento
+│ ┌────────────────────────────────┐ │
+│ │ ◷ TV                R$ 33,33   │ │  ◷ previsto, ✓ realizado
+│ │   Parcela 2 de 3 · Previsto    │ │
+│ │ ✓ Salário         R$ 1.500,00  │ │
+│ │   Recebido                 (+) │ │  novo lançamento
 └────────────────────────────────────┘
 ```
 
-A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
+Não há barra de título: o mês fica só nas abas e o topo usa a cor do tipo, até a barra de status. O menu ⋮ ("Mais opções") tem o item "Sair", que abre o diálogo "Sair da conta?" ("Seus lançamentos continuam salvos."), com "Sair" no vermelho de perigo.
+
+A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F7646C`) para gastos.
 
 ## Meses (`lib/commons/months.dart`)
 
@@ -29,21 +34,36 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 
 - A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
 - Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
-- **Erro na busca:** "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre.
-- **Resumo:** ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
+- **Erro na busca:** um cartão branco com ícone, "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre. O botão + fica desativado até a busca dar certo.
+- **Avisos de sucesso:** uma SnackBar com "Lançamento salvo" (criar ou editar) ou "Lançamento excluído" (pela lista ou pela edição). Excluir com falha mantém o item e mostra "Não foi possível excluir".
+- **Fonte do sistema:** o layout funciona até 130%. As abas de mês voltam a mostrar o mês selecionado quando a escala muda com a tela aberta (`TabBar` com `key` da escala).
+- **Resumo** (`lib/widgets/balance_resume.dart`): ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
+  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto, e somem quando não falta nada.
+  - Com o balanço negativo, aparece "Gastos acima dos ganhos" embaixo do valor.
+  - Os valores encolhem (`FittedBox`) em vez de estourar quando são muito grandes.
 
 ## Lista (`lib/widgets/balance_tab_view.dart`)
 
-- Duas abas, GANHOS e GASTOS. Cada item mostra o nome (com "parcela/total" em parcelado), o valor e um ponto quando ainda não foi realizado.
+- Duas abas, GANHOS e GASTOS, com 48 dp de altura.
+- **Cada item** (`lib/widgets/balance/balance.dart`) mostra:
+  - o ícone de status: ✓ quando realizado, relógio quando previsto;
+  - o nome;
+  - o subtítulo de `balanceSubtitle`, como "Parcela 2 de 3 · Recebido", "Pago" ou "Previsto";
+  - o valor na cor do tipo, com algarismos de largura fixa.
+- **O toque** tem a cor do tipo e é retangular.
+- **Mês sem lançamentos:** "Nenhum ganho neste mês" (ou gasto) e "Toque em + para lançar" (`lib/widgets/state_message.dart`).
+- **Fim da lista:** tem 88 dp de espaço, para o último item não ficar atrás do botão +.
 - **Tocar** abre o formulário de edição.
-- **Arrastar para a esquerda** pede confirmação:
+- **Arrastar para a esquerda** mostra um fundo em vermelho de perigo (`#D63A42`), que se destaca do coral de gastos, e pede confirmação:
 
-  | Lançamento | Opções | Chamada |
-  |---|---|---|
-  | Parcelado | "Só esta parcela" | `deleteInstallment(id, parcela)` |
-  | Parcelado | "Todas as parcelas" | `deleteBalance(id)` |
-  | À vista | "Excluir" | `deleteBalance(id)` |
-  | Qualquer um | "Cancelar" | nada; o item volta ao lugar |
+  | Lançamento | Texto do diálogo | Opções | Chamada |
+  |---|---|---|---|
+  | Parcelado | "Este lançamento tem N parcelas. Você pode excluir só a parcela n ou todas." | "Só esta" | `deleteInstallment(id, parcela)` |
+  | Parcelado | (o mesmo) | "Todas" | `deleteBalance(id)` |
+  | À vista | "Esta ação não pode ser desfeita." | "Excluir" | `deleteBalance(id)` |
+  | Qualquer um | | "Cancelar" | nada; o item volta ao lugar |
+
+  O diálogo fica em `lib/widgets/delete_dialog.dart` (`confirmDeleteBalance`); as ações destrutivas aparecem no vermelho de perigo.
 
 - **Se a API falhar**, o item **continua na lista** e aparece "Não foi possível excluir".
 - Depois de uma exclusão que deu certo, o item sai da lista na hora (conjunto `_removed`), antes de a recarga chegar: o Flutter não aceita um `Dismissible` arrastado continuar na árvore. A chave de cada item é `id-parcela`.
@@ -55,9 +75,14 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 | Nome | Obrigatório, até 30 caracteres |
 | Valor | Obrigatório, com máscara de R$ (`currency_text_input_formatter`). Em parcelado, o rótulo é **"Valor total"** e o campo começa com o `totalValue` |
 | Realizado | Chave liga/desliga |
-| Parcela(s) | De 1 a 30 |
+| Parcelas | De 1 a 30. O rótulo fica à esquerda e o "− número +" à direita; os botões têm rótulo acessível |
 
-- O botão "Salvar" fica em carregando e não responde a toques repetidos até a resposta chegar.
+- **Título:** "Novo ganho/gasto" ou "Editar ganho/gasto".
+- **Um estilo só para os valores digitados:** Nome, Valor e o número de Parcelas usam `formValueStyle` (18 sp, regular, texto principal). O rótulo dos campos de texto fica sempre acima e o texto à esquerda.
+- **Contador:** "n/30" só aparece nos 5 últimos caracteres antes do limite.
+- **Excluir pela edição:** o botão "Excluir" (só na edição) abre o mesmo diálogo do arraste e chama `onDelete(onlyInstallment)`. Se falhar, o modal fica aberto e mostra "Não foi possível excluir".
+- O cursor, o puxador e a seleção seguem a cor do tipo.
+- O botão "Salvar" fica sem ícone, em carregando, e não responde a toques repetidos até a resposta chegar.
 - **Sucesso:** o modal fecha e a lista recarrega.
 - **Erro:** a mensagem aparece **dentro do modal**, acima do botão. Uma SnackBar ficaria escondida atrás dele. A mensagem é a da API (`ApiException`) ou "Não foi possível salvar".
 - **Valores:** `AppFormats.stringMoneyToDouble` converte "R$ 1.234,56" em `1234.56`.

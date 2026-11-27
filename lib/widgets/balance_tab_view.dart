@@ -2,9 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
+import 'package:planejamento_financeiro/widgets/state_message.dart';
 import 'package:planejamento_financeiro/widgets/balance/balance.dart';
 import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/base_modal.dart';
+import 'package:planejamento_financeiro/widgets/delete_dialog.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
 import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
@@ -50,32 +53,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
   }
 
   Future<bool> _confirmDelete(BalanceModel balance) async {
-    final onlyInstallment = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Excluir "${balance.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          if (balance.isInstallmented) ...[
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Todas as parcelas'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Só esta parcela'),
-            ),
-          ] else
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Excluir'),
-            ),
-        ],
-      ),
-    );
+    final onlyInstallment = await confirmDeleteBalance(context, balance);
     if (onlyInstallment == null || widget.onDelete == null) return false;
     try {
       await widget.onDelete!(balance, onlyInstallment: onlyInstallment);
@@ -124,11 +102,11 @@ class _BalanceTabViewState extends State<BalanceTabView>
               dragStartBehavior: DragStartBehavior.down,
               isScrollable: true,
               tabs: const [
-                Tab(text: 'GANHOS'),
-                Tab(text: 'GASTOS'),
+                Tab(text: 'GANHOS', height: 48),
+                Tab(text: 'GASTOS', height: 48),
               ],
               unselectedLabelStyle: Theme.of(context).textTheme.bodyLarge!
-                  .copyWith(color: AppColors.whiteDesable),
+                  .copyWith(color: AppColors.white),
               labelStyle: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.white,
@@ -166,71 +144,100 @@ class _BalanceTabViewState extends State<BalanceTabView>
     // Material (e não Container) para o efeito de toque dos ListTile aparecer.
     return Material(
       color: AppColors.white,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(AppRadius.lg),
+      ),
       clipBehavior: Clip.antiAlias,
-      child: ListView.builder(
-        scrollDirection: Axis.vertical,
-        shrinkWrap: true,
-        itemCount: visible.length,
-        itemBuilder: (_, index) {
-          BalanceModel balance = visible[index];
-          return Dismissible(
-            key: ValueKey(_keyOf(balance)),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(index == 0 ? 16 : 0),
-                ),
-                color: AppColors.secondary,
+      child: visible.isEmpty
+          ? Align(
+              alignment: Alignment.topCenter,
+              child: StateMessage(
+                icon: isGain
+                    ? Icons.savings_outlined
+                    : Icons.receipt_long_outlined,
+                title: isGain
+                    ? 'Nenhum ganho neste mês'
+                    : 'Nenhum gasto neste mês',
+                subtitle: 'Toque em + para lançar',
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      balance.isInstallmented
-                          ? "Excluir parcelamentos"
-                          : "Excluir",
-                      style: Theme.of(context).textTheme.bodySmall,
+            )
+          : ListView.builder(
+              // Espaço no fim para o último item não ficar atrás do botão +.
+              padding: const EdgeInsets.only(bottom: 88),
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: visible.length,
+              itemBuilder: (_, index) {
+                BalanceModel balance = visible[index];
+                return Dismissible(
+                  key: ValueKey(_keyOf(balance)),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(index == 0 ? AppRadius.lg : 0),
+                      ),
+                      color: AppColors.danger,
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.delete_outline, color: Colors.white),
-                  ],
-                ),
-              ),
-            ),
-            confirmDismiss: (_) => _confirmDelete(balance),
-            onDismissed: (_) => setState(() => _removed.add(_keyOf(balance))),
-            child: Column(
-              children: [
-                Balance(
-                  onTap: () => baseModal(
-                    context,
-                    FormBalance(
-                      typeBalance: balance.type,
-                      balanceEdit: balance,
-                      onSubmit: widget.onEdit == null
-                          ? null
-                          : (edited) => widget.onEdit!(balance, edited),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.base,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            balance.isInstallmented
+                                ? "Excluir parcelamentos"
+                                : "Excluir",
+                            style: Theme.of(context).textTheme.bodySmall!
+                                .copyWith(color: AppColors.white),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.white,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  name: balance.isInstallmented
-                      ? '${balance.name} - ${balance.installment}/${balance.totalInstallments}'
-                      : balance.name,
-                  value: balance.value,
-                  isDanger: !isGain,
-                  isDot: !balance.realized,
-                ),
-                if (index != visible.length)
-                  const Divider(color: AppColors.grayLight, height: 0),
-              ],
+                  confirmDismiss: (_) => _confirmDelete(balance),
+                  onDismissed: (_) =>
+                      setState(() => _removed.add(_keyOf(balance))),
+                  child: Column(
+                    children: [
+                      Balance(
+                        onTap: () => baseModal(
+                          context,
+                          FormBalance(
+                            typeBalance: balance.type,
+                            balanceEdit: balance,
+                            onSubmit: widget.onEdit == null
+                                ? null
+                                : (edited) => widget.onEdit!(balance, edited),
+                            onDelete: widget.onDelete == null
+                                ? null
+                                : (only) => widget.onDelete!(
+                                    balance,
+                                    onlyInstallment: only,
+                                  ),
+                          ),
+                        ),
+                        name: balance.name,
+                        subtitle: balanceSubtitle(balance),
+                        value: balance.value,
+                        isDanger: !isGain,
+                        realized: balance.realized,
+                      ),
+                      if (index != visible.length)
+                        const Divider(color: AppColors.grayLight, height: 0),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

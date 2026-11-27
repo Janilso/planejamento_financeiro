@@ -32,4 +32,23 @@ void main() {
     await tester.tap(find.byType(ElevatedButton), warnIfMissed: false);
     expect(pressed, 0);
   });
+
+  testWidgets('AppButton com ícone não estoura em 320 dp', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      wrap(
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 44),
+          child: AppButton(text: 'ENTRAR / CADASTRAR', icon: Icons.login),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getCenter(find.byIcon(Icons.login)).dx,
+      lessThan(tester.getCenter(find.text('ENTRAR / CADASTRAR')).dx),
+    );
+  });
 }

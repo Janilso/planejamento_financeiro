@@ -1,22 +1,11 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/resume_money.dart';
 
-// class BalanceResume extends StatelessWidget {
-//   final List<BalanceModel> gainBalances;
-//   final List<BalanceModel> expensesBalances;
-
-//   const BalanceResume({
-//     super.key,
-//     this.gainBalances = const [],
-//     this.expensesBalances = const [],
-//   });
-
-//   @override
-//   State<BalanceResume> createState() => _BalanceResumeState();
-// }
-
+// Resumo do mês: ganhos, gastos, quanto ainda falta e o balanço.
 class BalanceResume extends StatelessWidget {
   final List<BalanceModel> gains;
   final List<BalanceModel> expenses;
@@ -27,43 +16,53 @@ class BalanceResume extends StatelessWidget {
     this.expenses = const [],
   });
 
-  double _calValuesBalance(List<BalanceModel> data) {
-    // double ganhos = gains.fold(
-    //   0,
-    //   (acum, balance) => acum + (balance.value ?? 0),
-    // );
-    // double gastos = expenses.fold(
-    //   0,
-    //   (acum, balance) => acum + (balance.value ?? 0),
-    // );
-    // return [ganhos, gastos];
+  double _sum(Iterable<BalanceModel> data) =>
+      data.fold(0, (acum, balance) => acum + (balance.value ?? 0));
 
-    return data.fold(0, (acum, balance) => acum + (balance.value ?? 0));
+  // "Falta …" só quando há algo previsto.
+  String? _hint(String prefix, List<BalanceModel> data) {
+    final pending = _sum(data.where((b) => !b.realized));
+    return pending > 0 ? '$prefix ${AppFormats.valueToMoney(pending)}' : null;
   }
 
   @override
   Widget build(BuildContext context) {
-    double ganhos = _calValuesBalance(gains);
-    double gastos = _calValuesBalance(expenses);
+    final ganhos = _sum(gains);
+    final gastos = _sum(expenses);
+    final balanco = ganhos - gastos;
     return Column(
       children: [
-        Wrap(
-          spacing: 40,
-          children: [
-            IntrinsicWidth(
-              child: ResumeMoney(label: 'GANHOS', value: ganhos),
-            ),
-            IntrinsicWidth(
-              child: ResumeMoney(label: 'GASTOS', value: gastos),
-            ),
-          ],
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ResumeMoney(
+                  label: 'GANHOS',
+                  value: ganhos,
+                  hint: _hint('Falta receber', gains),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.base),
+              Expanded(
+                child: ResumeMoney(
+                  label: 'GASTOS',
+                  value: gastos,
+                  hint: _hint('Falta pagar', expenses),
+                ),
+              ),
+            ],
+          ),
         ),
-        const Divider(color: AppColors.whiteDesable, thickness: 2),
-        Center(
+        const Divider(color: AppColors.white, thickness: 2),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: ResumeMoney(
             label: 'balanço',
-            value: ganhos - gastos,
+            value: balanco,
             center: true,
+            hint: balanco < 0 ? 'Gastos acima dos ganhos' : null,
           ),
         ),
       ],

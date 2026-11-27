@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/theme/texts_style.dart';
 import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
@@ -9,6 +10,8 @@ class InfiniteTabView extends StatefulWidget {
   final String Function(BuildContext context, int index)? buildTabBar;
   final Widget Function(BuildContext context, int index)? buildTabView;
   final void Function(int index)? onChangePage;
+  // Fica à direita das abas, na mesma linha (por exemplo, o menu ⋮).
+  final Widget? trailing;
 
   const InfiniteTabView({
     super.key,
@@ -17,6 +20,7 @@ class InfiniteTabView extends StatefulWidget {
     this.buildTabBar,
     this.buildTabView,
     this.onChangePage,
+    this.trailing,
   });
 
   @override
@@ -65,24 +69,37 @@ class InfiniteTabViewState extends State<InfiniteTabView>
       initialIndex: widget.initialIndex,
       child: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            labelPadding: EdgeInsets.symmetric(horizontal: 12),
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            unselectedLabelStyle: AppTextsStyle.bodyLarge(
-              color: AppColors.whiteDesable,
-            ),
-            labelStyle: AppTextsStyle.bodyLarge(
-              fontWeight: FontWeight.w600,
-              color: AppColors.white,
-            ),
-            tabs: List.generate(
-              widget.length,
-              (index) => Tab(text: widget.buildTabBar!(context, index)),
-            ),
-            indicatorColor: AppColors.white,
-            dividerHeight: 0,
+          Row(
+            children: [
+              Expanded(
+                child: TabBar(
+                  // Recria ao mudar a escala da fonte, para a aba selecionada
+                  // continuar visível.
+                  key: ValueKey(MediaQuery.textScalerOf(context)),
+                  controller: _tabController,
+                  labelPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  unselectedLabelStyle: AppTextsStyle.bodyLarge(
+                    color: AppColors.white,
+                  ),
+                  labelStyle: AppTextsStyle.bodyLarge(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.white,
+                  ),
+                  tabs: List.generate(
+                    widget.length,
+                    (index) => Tab(
+                      text: widget.buildTabBar!(context, index),
+                      height: 48,
+                    ),
+                  ),
+                  indicatorColor: AppColors.white,
+                  dividerHeight: 0,
+                ),
+              ),
+              ?widget.trailing,
+            ],
           ),
           Expanded(
             child: TabBarView(

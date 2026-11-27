@@ -1,7 +1,12 @@
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
+import 'package:planejamento_financeiro/theme/overlay.dart';
+import 'package:planejamento_financeiro/widgets/button.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 
 void main() {
@@ -39,5 +44,70 @@ void main() {
 
     expect(find.byType(SnackBar), findsNothing);
     expect(find.text('ENTRAR / CADASTRAR'), findsOneWidget);
+  });
+
+  testWidgets('o aviso de erro aparece acima do botão', (tester) async {
+    await tapLogin(tester, () async => throw Exception('x'));
+    await tester.pumpAndSettle();
+
+    final aviso = tester.getRect(find.byType(SnackBar));
+    final botao = tester.getRect(find.byType(AppButton));
+    expect(aviso.bottom, lessThanOrEqualTo(botao.top));
+  });
+
+  testWidgets('o botão não estoura em 320 dp', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.defaultTheme, home: const LoginScreen()),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('o ícone do Google fica à esquerda do texto', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.defaultTheme, home: const LoginScreen()),
+    );
+    expect(
+      tester.getCenter(find.byIcon(AppIcons.google)).dx,
+      lessThan(tester.getCenter(find.text('ENTRAR / CADASTRAR')).dx),
+    );
+  });
+
+  testWidgets('a barra de status usa ícones claros sobre a cor da marca', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.defaultTheme, home: const LoginScreen()),
+    );
+    final region = tester.widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+      find.byType(AnnotatedRegion<SystemUiOverlayStyle>).first,
+    );
+    expect(region.value, onBrandOverlay);
+  });
+
+  testWidgets('o texto do botão não é cortado com fonte em 130%', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.defaultTheme,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(1.3)),
+          child: child!,
+        ),
+        home: const LoginScreen(),
+      ),
+    );
+    final paragraph = tester.renderObject<RenderParagraph>(
+      find.text('ENTRAR / CADASTRAR'),
+    );
+    expect(paragraph.didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
   });
 }
