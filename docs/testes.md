@@ -40,6 +40,8 @@ dart format --output=none --set-exit-if-changed lib test
 | `widgets/balance_tab_view_test.dart` | Mês vazio, espaço para o +, arraste e abas de 48 dp |
 | `widgets/delete_dialog_test.dart` | Opções, textos, cor de perigo e acessibilidade do diálogo de excluir |
 | `widgets/form_balance_test.dart` | Título, estilo único dos valores, contador, Excluir pela edição e acessibilidade |
+| `volumes_test.dart` | Os históricos sintéticos (`test/volumes.dart`): contagem de itens, meses, ids, datas às 15:00Z e determinismo |
+| `tool/perf_resumo_test.dart` | O resumo das medições de desempenho (`tool/perf_resumo.dart`): mediana das rodadas e os vereditos aprovado, reprovado, limite e já existe |
 
 ## Padrões
 
@@ -73,6 +75,43 @@ Linha de base de 2026-11-27 (Android a 120 Hz, valores em ms; antes das mudança
 | Modal abrir/fechar | 535 | 1,34 / 2,12 / 5,48 / 11,92 | 2,21 / 2,60 / 2,86 / 17,29 |
 
 Depois das mudanças de animação (mola padrão, páginas sem loader, cor animada e linha de erro reservada), a mesma bateria deu números equivalentes: p99 de build de 4,75 / 8,16 / 5,24 ms e p99 de raster de 2,05 / 3,96 / 3,11 ms nos três fluxos. Uma rodada por fluxo: diferenças de média dessa ordem são ruído.
+
+## Desempenho com volume (profile)
+
+`integration_test/volume_perf_test.dart` mede a home com histórico grande, no **celular**, em profile. Diferente do teste das animações, os dados passam pelo `BalanceRepository` e pelo `HttpClient` de verdade, sobre um adaptador do Dio que serve o JSON sintético com `content-length` (como a API sem gzip): é o único jeito de incluir a decisão do Dio de decodificar fora da thread principal (acima de 50 KB) e o `fromMap` na thread principal. Não roda no `flutter test` nem no CI.
+
+```sh
+flutter drive --profile --no-dds -d <celular> \
+  --driver=test_driver/perf_driver.dart \
+  --target=integration_test/volume_perf_test.dart \
+  [--dart-define=VOLUMES=leve,pesado,extremo]
+dart run tool/perf_resumo.dart   # tabela com as 3 rodadas mais recentes
+```
+
+Cada rodada grava `build/perf/volume_<carimbo>.json`. Rode 3 vezes e deixe o `tool/perf_resumo.dart` tirar a mediana e aplicar os critérios. O `drive` apaga a sessão do app (como no teste das animações): depois dele, é preciso entrar de novo com a conta Google.
+
+**Volumes** (`test/volumes.dart`, determinísticos; datas às 15:00Z, até o dia 28):
+
+| Volume | Meses | Lançamentos por mês | Itens no `GET` |
+|---|---|---|---|
+| `leve` | 12 | 15 | 504 |
+| `pesado` | 60 (o mês atual com 150) | 20 | 3.724 |
+| `extremo` | 120 | 25 | 8.400 |
+
+Um em cada cinco lançamentos é parcelado em 10x, com as parcelas nos meses seguintes. O teste roda primeiro um aquecimento sem relatório e deixa o `extremo` por último.
+
+**Fluxos e critérios** (mediana de 3 rodadas, no `pesado`):
+
+| Fluxo | O que mede | Critério |
+|---|---|---|
+| `abrir` | os dados chegam com o loader na tela | pior quadro de build e raster < 16 ms |
+| `troca_mes_perto` | 21 arremessos para o passado (25 a 49 abas) | p99 < 8,3 ms e pior quadro < 16 ms |
+| `troca_mes_longe` | mais 39 arremessos (até 85 abas) | igual |
+| `troca_tipo` | 6 toques alternados em GASTOS e GANHOS | p99 < 8,3 ms |
+| `rolar_lista` | 3 arremessos para baixo e 3 para cima na lista de GASTOS | p99 < 8,3 ms |
+| `salvar` | do toque em Salvar até a recarga assentar | pior quadro < 16 ms |
+
+O `tool/perf_resumo.dart` classifica cada fluxo do `pesado`: `reprovado` (falha e fica pelo menos 20% pior que o `leve`), `limite` (falha, mas perto do `leve`), `já existe` (o `leve` também falha) ou `✅`. O `extremo` só usa o critério absoluto. Além dos quadros, o relatório traz `abrir_ms` (do GET liberado até o resumo aparecer) e `conversao` (`decode_ms` e `fromMap_ms`, na thread principal, de cada volume).
 
 ## CI
 
