@@ -74,14 +74,17 @@ class _HomeScreenState extends State<HomeScreen> {
       (data) {
         // Reconstruir aqui é o que leva o resultado às páginas que o
         // TabBarView ainda não montou: elas guardam o initialData do build.
-        if (!mounted) return;
+        // Só a busca mais recente vale: uma recarga antiga que chega depois
+        // não pode desfazer a nova.
+        if (!mounted || !identical(future, _balances)) return;
         setState(() {
           _lastBalances = data;
           _loadFailed = false;
         });
       },
       onError: (_) {
-        if (mounted && !_loadFailed) setState(() => _loadFailed = true);
+        if (!mounted || !identical(future, _balances)) return;
+        if (!_loadFailed) setState(() => _loadFailed = true);
       },
     );
     return future..ignore();
@@ -112,10 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _tipo.value = progress.clamp(0.0, 1.0);
   }
 
+  // Sem setState: o + lê o tipo no toque e as páginas novas leem ao montar.
+  // Reconstruir a home inteira a cada troca de tipo custa quadros à toa.
   void _handleChangeBalance(String typeBalance) {
-    setState(() {
-      typeBalancePage = typeBalance;
-    });
+    typeBalancePage = typeBalance;
   }
 
   void _handleChangeMonth([int index = 0]) {
@@ -124,6 +127,13 @@ class _HomeScreenState extends State<HomeScreen> {
     DateTime actualMonth = months[index];
     bool isMorePast = index <= 3;
     bool isMoreFuture = index >= (months.length - 4);
+
+    // Só a lista que cresce precisa reconstruir a home; nos outros casos, a
+    // página já está na tela e só guardamos o índice.
+    if (!isMorePast && !isMoreFuture) {
+      actualIndex = index;
+      return;
+    }
 
     newMonths = [
       ...(isMorePast ? monthsBefore(months[0], initialNextsPrevsMonths) : []),
