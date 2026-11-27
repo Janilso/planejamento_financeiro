@@ -4,7 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/network/session_events.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/screens/splash.dart';
@@ -25,7 +25,7 @@ void main() async {
   // Refresh recusado pela API: volta para o login com um aviso.
   onSessionExpiredHandler = () {
     navigatorKey.currentState?.pushAndRemoveUntil(
-      CupertinoPageRoute(builder: (context) => const LoginScreen()),
+      fadeRoute((context) => const LoginScreen()),
       (route) => false,
     );
     messengerKey.currentState?.showSnackBar(

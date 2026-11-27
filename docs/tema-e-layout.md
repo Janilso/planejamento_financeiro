@@ -49,9 +49,11 @@ Valores em dinheiro fora do formulário usam `FontFeature.tabularFigures()`.
 - Campos: rótulo sempre acima, exemplo em `hint`, erro em perigo.
 - SnackBar flutuante; modal com fundo branco.
 
-## Movimento
+## Movimento (`lib/theme/motion.dart`, `lib/commons/routes.dart`)
 
 - **Cor entre ganhos e gastos:** o fundo da home e o botão + seguem as abas GANHOS/GASTOS. A home guarda um valor de 0 (ganhos) a 1 (gastos) num `ValueNotifier` (`_tipo`) e a cor é `Color.lerp(primary, secondary, valor)`. Cada `BalanceTabView` reporta a posição da sua aba (`onTabProgress`, vinda de `TabController.animation`), então a cor acompanha o dedo no arraste, o assentamento e o toque na aba, sem esperar o fim do gesto. O corpo da home vai como `child` do `ValueListenableBuilder`, para a lista não ser reconstruída a cada quadro.
+- **Troca de tela em fade:** splash, login e home se substituem com `fadeRoute` (`lib/commons/routes.dart`), um fade de `AppMotion.page` (300 ms). O app só vai para a frente (`pushReplacement` e `pushAndRemoveUntil`), então o deslize do iOS não fazia sentido. Vale para splash → login/home, login → home, Sair e sessão expirada.
+- **Logo compartilhado:** o logo da splash e o do login são um `Hero` com a mesma tag (`logoHeroTag`); ele desliza até a nova posição enquanto o resto aparece em fade.
 - A troca de mês e a de GANHOS/GASTOS usam a mola padrão do `TabBarView`, sem quique.
 - Ainda **não** há tratamento de "remover animações" do Android: nem o SDK Material nem o app leem `MediaQuery.disableAnimations`.
 

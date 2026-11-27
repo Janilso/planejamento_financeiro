@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:planejamento_financeiro/commons/images.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
 import 'package:planejamento_financeiro/repository/session.dart';
@@ -44,9 +44,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      CupertinoPageRoute(
-        builder: (context) =>
-            loggedIn ? const HomeScreen() : const LoginScreen(),
+      fadeRoute(
+        (context) => loggedIn ? const HomeScreen() : const LoginScreen(),
       ),
     );
   }
@@ -61,7 +60,10 @@ class _SplashScreenState extends State<SplashScreen> {
           child: ListView(
             shrinkWrap: true,
             children: [
-              AppImage.logoWhite(width: 168, height: 117),
+              Hero(
+                tag: logoHeroTag,
+                child: AppImage.logoWhite(width: 168, height: 117),
+              ),
               const SizedBox(height: AppSpacing.md),
               Container(
                 margin: EdgeInsets.symmetric(

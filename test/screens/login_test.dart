@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/theme/overlay.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
@@ -24,6 +25,20 @@ void main() {
     await tester.pump();
     await tester.pump();
   }
+
+  testWidgets('o logo é compartilhado com a splash (Hero)', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.defaultTheme,
+        home: LoginScreen(signIn: () async {}),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate((w) => w is Hero && w.tag == logoHeroTag),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('mostra erro quando o login falha', (tester) async {
     await tapLogin(tester, () async => throw Exception('x'));

@@ -1,4 +1,3 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/commons/months.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await GoogleSignIn.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      CupertinoPageRoute(builder: (context) => const LoginScreen()),
+      fadeRoute((context) => const LoginScreen()),
       (route) => false,
     );
   }
