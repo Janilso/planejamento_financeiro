@@ -4,18 +4,23 @@
 
 ```
 ┌────────────────────────────────────┐
-│       GANHOS - Novembro 2026   [⇥] │  barra do topo e botão Sair
-│  OUT/26   NOV/26   DEZ/26   JAN/27 │  abas de meses, infinitas
-│  GANHOS R$ 1.900   GASTOS R$ 1.800 │
-│          BALANÇO R$ 100            │  resumo do mês
+│ OUT/26   NOV/26   DEZ/26   JAN/27 ⋮│  abas de meses, infinitas, e o menu ⋮ (Sair)
+│ GANHOS              GASTOS         │
+│ R$ 1.900,00         R$ 1.800,00    │  resumo do mês
+│ Falta receber R$ 0  Falta pagar …  │  (só quando há algo previsto)
+│          BALANÇO R$ 100            │
 │        GANHOS   |   GASTOS         │  abas por tipo
-│  ● TV - 2/3            R$ 33,33    │  ● = ainda não realizado
-│    Salário           R$ 1.500,00   │
-│                                (+) │  novo lançamento
+│ ┌────────────────────────────────┐ │
+│ │ ◷ TV                R$ 33,33   │ │  ◷ previsto, ✓ realizado
+│ │   Parcela 2 de 3 · Previsto    │ │
+│ │ ✓ Salário         R$ 1.500,00  │ │
+│ │   Recebido                 (+) │ │  novo lançamento
 └────────────────────────────────────┘
 ```
 
-A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
+Não há barra de título: o mês fica só nas abas e o topo usa a cor do tipo, até a barra de status. O menu ⋮ ("Mais opções") tem o item "Sair", que abre o diálogo "Sair da conta?" ("Seus lançamentos continuam salvos."), com "Sair" no vermelho de perigo.
+
+A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F7646C`) para gastos.
 
 ## Meses (`lib/commons/months.dart`)
 
@@ -29,7 +34,9 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 
 - A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
 - Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
-- **Erro na busca:** "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre.
+- **Erro na busca:** um cartão branco com ícone, "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre. O botão + fica desativado até a busca dar certo.
+- **Avisos de sucesso:** uma SnackBar com "Lançamento salvo" (criar ou editar) ou "Lançamento excluído" (pela lista ou pela edição). Excluir com falha mantém o item e mostra "Não foi possível excluir".
+- **Fonte do sistema:** o layout funciona até 130%. As abas de mês voltam a mostrar o mês selecionado quando a escala muda com a tela aberta (`TabBar` com `key` da escala).
 - **Resumo** (`lib/widgets/balance_resume.dart`): ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
   - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto, e somem quando não falta nada.
   - Com o balanço negativo, aparece "Gastos acima dos ganhos" embaixo do valor.

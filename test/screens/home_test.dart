@@ -86,6 +86,13 @@ void main() {
     expect(repo.getCalls, 2);
   });
 
+  Future<void> openMenuAndTapSair(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('Mais opções'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sair'));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> openFormAndSave(WidgetTester tester) async {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -130,18 +137,90 @@ void main() {
       onLogout: () async => logouts++,
     );
 
-    await tester.tap(find.byTooltip('Sair'));
-    await tester.pumpAndSettle();
+    await openMenuAndTapSair(tester);
     expect(find.text('Sair da conta?'), findsOneWidget);
+    expect(find.text('Seus lançamentos continuam salvos.'), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
     expect(logouts, 0);
 
-    await tester.tap(find.byTooltip('Sair'));
-    await tester.pumpAndSettle();
+    await openMenuAndTapSair(tester);
     await tester.tap(find.widgetWithText(TextButton, 'Sair'));
     await tester.pumpAndSettle();
     expect(logouts, 1);
+  });
+
+  testWidgets('sem barra de título', (tester) async {
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+    expect(find.text('GANHOS - Novembro 2026'), findsNothing);
+    expect(find.byType(AppBar), findsNothing);
+  });
+
+  testWidgets('erro desativa o botão + até carregar de novo', (tester) async {
+    final repo = FakeBalanceRepository(error: Exception('x'));
+    await pumpHome(tester, repo);
+    FloatingActionButton fab() =>
+        tester.widget(find.byType(FloatingActionButton));
+    expect(fab().onPressed, isNull);
+    // Desativado, ele também parece desativado.
+    expect(fab().backgroundColor!.a, lessThan(1));
+
+    repo.error = null;
+    repo.data = {};
+    await tester.tap(find.text('Tentar de novo'));
+    await tester.pump();
+    await tester.pump();
+    expect(fab().onPressed, isNotNull);
+  });
+
+  testWidgets('salvar avisa', (tester) async {
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+    await openFormAndSave(tester);
+    expect(find.text('Lançamento salvo'), findsOneWidget);
+  });
+
+  testWidgets('botão + tem rótulo', (tester) async {
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+    expect(find.byTooltip('Novo lançamento'), findsOneWidget);
+  });
+
+  testWidgets('toque e rótulos na home', (tester) async {
+    final handle = tester.ensureSemantics();
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    handle.dispose();
+  });
+
+  testWidgets('fonte em 130% não estoura e mantém NOV/26 visível', (
+    tester,
+  ) async {
+    final repo = FakeBalanceRepository(data: {});
+    Widget app(double scale) => MaterialApp(
+      theme: AppTheme.defaultTheme,
+      locale: const Locale('pt', 'BR'),
+      supportedLocales: const [Locale('pt', 'BR')],
+      localizationsDelegates: const [
+        ...GlobalMaterialLocalizations.delegates,
+        FormBuilderLocalizations.delegate,
+      ],
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: TextScaler.linear(scale)),
+        child: child!,
+      ),
+      home: HomeScreen(repository: repo, clock: () => DateTime(2026, 11, 25)),
+    );
+    await tester.pumpWidget(app(1.0));
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpWidget(app(1.3));
+    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final nov = tester.getRect(find.text('NOV/26'));
+    final tela = tester.getRect(find.byType(Scaffold));
+    expect(tela.contains(nov.center), isTrue);
   });
 
   group('arrastar para excluir', () {
@@ -177,6 +256,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.calls, ['deleteInstallment abc 2']);
+    });
+
+    testWidgets('excluir avisa', (tester) async {
+      await pumpHome(tester, repoWithTv());
+      await swipeTv(tester);
+      await tester.tap(find.text('Só esta'));
+      await tester.pumpAndSettle();
+      expect(find.text('Lançamento excluído'), findsOneWidget);
+    });
+
+    testWidgets('excluir pela edição', (tester) async {
+      final repo = repoWithTv();
+      await pumpHome(tester, repo);
+      await tester.tap(find.text('TV'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Excluir'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Só esta'));
+      await tester.pumpAndSettle();
+      expect(repo.calls, ['deleteInstallment abc 2']);
+      expect(find.text('Lançamento excluído'), findsOneWidget);
     });
 
     testWidgets('todas as parcelas', (tester) async {
