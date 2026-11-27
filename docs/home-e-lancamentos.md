@@ -27,6 +27,7 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 - **Sempre no dia 1.** Manter o dia de hoje (31, por exemplo) faria o `DateTime` pular para o mês seguinte e repetir ou sumir meses.
 - `monthsAround(hoje)` monta 12 meses para trás, o atual e 12 para frente.
 - **Abas infinitas** (`HomeScreen._handleChangeMonth`): ao chegar a 4 abas de uma das pontas, o app acrescenta mais 12 meses daquele lado (`monthsBefore`/`monthsAfter`) e mantém o mês selecionado.
+- **Sem quique:** a troca de mês usa a física padrão do `TabBarView` (mola com razão de amortecimento 1,1). A mola customizada anterior (razão 0,71) passava ~22 px do destino e deixava ver uma faixa do mês seguinte; as abas GANHOS/GASTOS nunca quicaram, porque só têm duas páginas e o destino é sempre uma ponta.
 - `monthKey(mês)` gera a chave `MMM/yy` em pt-BR, maiúsculas e sem ponto (`NOV/26`), **igual à da API**: é por ela que cada aba acha os seus lançamentos.
 - `dateForNewBalance(mêsDaAba, hoje)`: lançamento novo no mês atual usa a data de hoje; em outro mês, usa o mesmo dia de hoje limitado ao último dia daquele mês (31/01 → 28/02).
 

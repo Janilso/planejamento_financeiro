@@ -9,7 +9,6 @@ import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/base_modal.dart';
 import 'package:planejamento_financeiro/widgets/delete_dialog.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
-import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
 class BalanceTabView extends StatefulWidget {
   final List<BalanceModel> gainBalances;
@@ -120,7 +119,6 @@ class _BalanceTabViewState extends State<BalanceTabView>
               margin: const EdgeInsets.only(top: 0),
               child: TabBarView(
                 controller: _tabController,
-                physics: const CustomTabBarViewScrollPhysics(),
                 children: [
                   _buildBalances(context, widget.gainBalances),
                   _buildBalances(context, widget.expensesBalances, false),

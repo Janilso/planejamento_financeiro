@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/theme/texts_style.dart';
-import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
 class InfiniteTabView extends StatefulWidget {
   final int length;
@@ -104,7 +103,6 @@ class InfiniteTabViewState extends State<InfiniteTabView>
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              physics: const CustomTabBarViewScrollPhysics(),
               children: List.generate(
                 widget.length,
                 (index) => widget.buildTabView!(context, index),
