@@ -30,7 +30,10 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 - A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
 - Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
 - **Erro na busca:** "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre.
-- **Resumo:** ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
+- **Resumo** (`lib/widgets/balance_resume.dart`): ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
+  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto, e somem quando não falta nada.
+  - Com o balanço negativo, aparece "Gastos acima dos ganhos" embaixo do valor.
+  - Os valores encolhem (`FittedBox`) em vez de estourar quando são muito grandes.
 
 ## Lista (`lib/widgets/balance_tab_view.dart`)
 
