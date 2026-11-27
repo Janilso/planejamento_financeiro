@@ -50,6 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // O último resultado carregado: páginas novas (troca de mês, lista que
   // cresce) nascem com ele e não piscam o loader enquanto o Future resolve.
   MonthBalanceModel? _lastBalances;
+  // A cor do fundo e do botão +: 0 em ganhos, 1 em gastos. Acompanha o dedo e
+  // a animação das abas de tipo.
+  final ValueNotifier<double> _tipo = ValueNotifier(0);
 
   @override
   void initState() {
@@ -105,6 +108,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return monthKey(months[index]);
   }
 
+  void _handleTabProgress(double progress) {
+    _tipo.value = progress.clamp(0.0, 1.0);
+  }
+
   void _handleChangeBalance(String typeBalance) {
     setState(() {
       typeBalancePage = typeBalance;
@@ -130,7 +137,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       months = newMonths;
       actualIndex = newInitialIndex;
-      typeBalancePage = TypeBalance.gains;
     });
   }
 
@@ -230,17 +236,46 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final bool isGainTab = typeBalancePage == TypeBalance.gains;
-    final Color colorState = isGainTab
-        ? AppColors.primary
-        : AppColors.secondary;
+  void dispose() {
+    _tipo.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: onBrandOverlay,
-      child: Scaffold(
-        backgroundColor: colorState,
-        body: SafeArea(
+      // A cor segue as abas de tipo. O corpo vai como `child`, para não ser
+      // reconstruído a cada quadro.
+      child: ValueListenableBuilder<double>(
+        valueListenable: _tipo,
+        builder: (context, valor, body) {
+          final tone = Color.lerp(
+            AppColors.primary,
+            AppColors.secondary,
+            valor,
+          )!;
+          return Scaffold(
+            backgroundColor: tone,
+            body: body,
+            floatingActionButton: FloatingActionButton(
+              tooltip: 'Novo lançamento',
+              onPressed: _loadFailed
+                  ? null
+                  : () => baseModal(
+                      context,
+                      FormBalance(
+                        typeBalance: typeBalancePage,
+                        onSubmit: _onSubmitCreate,
+                      ),
+                    ),
+              backgroundColor: _loadFailed ? tone.withAlpha(110) : tone,
+              foregroundColor: AppColors.white,
+              child: const Icon(AppIcons.plus),
+            ),
+          );
+        },
+        child: SafeArea(
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
@@ -297,7 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: BalanceTabView(
                             gainBalances: data?.gains ?? [],
                             expensesBalances: data?.expenses ?? [],
+                            initialType: typeBalancePage,
                             onTabChanged: _handleChangeBalance,
+                            onTabProgress: _handleTabProgress,
                             onEdit: _onSubmitEdit,
                             onDelete: _onDelete,
                           ),
@@ -310,21 +347,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          tooltip: 'Novo lançamento',
-          onPressed: _loadFailed
-              ? null
-              : () => baseModal(
-                  context,
-                  FormBalance(
-                    typeBalance: typeBalancePage,
-                    onSubmit: _onSubmitCreate,
-                  ),
-                ),
-          backgroundColor: _loadFailed ? colorState.withAlpha(110) : colorState,
-          foregroundColor: AppColors.white,
-          child: const Icon(AppIcons.plus),
         ),
       ),
     );

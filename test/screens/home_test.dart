@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
+import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance_resume.dart';
+import 'package:planejamento_financeiro/widgets/balance_tab_view.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
 import 'package:planejamento_financeiro/widgets/load/load.dart';
@@ -491,6 +493,184 @@ void main() {
         find.text('Não foi possível carregar os lançamentos'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('cor do fundo e do botão +', () {
+    Color? fundo(WidgetTester tester) =>
+        tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor;
+    Color? corDoBotao(WidgetTester tester) => tester
+        .widget<FloatingActionButton>(find.byType(FloatingActionButton))
+        .backgroundColor;
+    bool perto(Color? a, Color b) =>
+        a != null &&
+        (a.r - b.r).abs() < 0.01 &&
+        (a.g - b.g).abs() < 0.01 &&
+        (a.b - b.b).abs() < 0.01;
+
+    testWidgets('segue o dedo ao arrastar de ganhos para gastos', (
+      tester,
+    ) async {
+      await pumpHome(tester, FakeBalanceRepository(data: {}));
+      expect(perto(fundo(tester), AppColors.primary), isTrue);
+      // Espaço vazio da lista: o gesto vai para as abas, não para um item.
+      final ponto =
+          tester.getBottomLeft(find.byType(BalanceTabView)) +
+          const Offset(60, -60);
+
+      final gesto = await tester.startGesture(ponto);
+      // O primeiro movimento só vence a folga do toque e assume o gesto.
+      await gesto.moveBy(const Offset(-30, 0));
+      await gesto.moveBy(const Offset(-200, 0));
+      await tester.pump();
+      // Com o dedo ainda na tela, a cor já saiu do verde e não chegou ao coral.
+      final primeiro = fundo(tester)!;
+      expect(perto(primeiro, AppColors.primary), isFalse);
+      expect(perto(primeiro, AppColors.secondary), isFalse);
+      expect(corDoBotao(tester), primeiro);
+
+      await gesto.moveBy(const Offset(-200, 0));
+      await tester.pump();
+      final segundo = fundo(tester)!;
+      expect(segundo, isNot(primeiro));
+      // Mais perto do coral: o canal vermelho cresce de ganhos para gastos.
+      expect(segundo.r, greaterThan(primeiro.r));
+
+      await gesto.up();
+      await tester.pumpAndSettle();
+      expect(perto(fundo(tester), AppColors.secondary), isTrue);
+      expect(perto(corDoBotao(tester), AppColors.secondary), isTrue);
+    });
+
+    testWidgets('toque na aba GASTOS anda junto com a página', (tester) async {
+      await pumpHome(tester, FakeBalanceRepository(data: {}));
+
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      final meio = fundo(tester);
+      expect(perto(meio, AppColors.primary), isFalse);
+      expect(perto(meio, AppColors.secondary), isFalse);
+      expect(corDoBotao(tester), meio);
+
+      await tester.pumpAndSettle();
+      expect(perto(fundo(tester), AppColors.secondary), isTrue);
+    });
+
+    testWidgets('trocar de mês estando em gastos mantém o coral', (
+      tester,
+    ) async {
+      await pumpHome(tester, FakeBalanceRepository(data: {}));
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pumpAndSettle();
+      expect(perto(fundo(tester), AppColors.secondary), isTrue);
+
+      await tester.tap(find.text('DEZ/26'));
+      for (var i = 0; i < 60; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(
+          perto(fundo(tester), AppColors.secondary),
+          isTrue,
+          reason: 'a cor mudou no quadro $i',
+        );
+      }
+    });
+  });
+
+  group('a aba de tipo se mantém ao trocar de mês', () {
+    FakeBalanceRepository repoComGastos() => FakeBalanceRepository(
+      data: {
+        'NOV/26': {
+          'gains': [balanceJson('Salário', 1500, 'gains')],
+          'expenses': [balanceJson('Mercado', 200, 'expenses')],
+        },
+        'DEZ/26': {
+          'gains': [
+            balanceJson('Bônus', 700, 'gains', date: '2026-12-15T12:00:00.000'),
+          ],
+          'expenses': [
+            balanceJson(
+              'Aluguel',
+              1300,
+              'expenses',
+              date: '2026-12-15T12:00:00.000',
+            ),
+          ],
+        },
+      },
+    );
+
+    // 0 = GANHOS, 1 = GASTOS, na página de mês que está na tela.
+    int abaAtiva(WidgetTester tester) => tester
+        .widget<TabBar>(
+          find.descendant(
+            of: find.byType(BalanceTabView),
+            matching: find.byType(TabBar),
+          ),
+        )
+        .controller!
+        .index;
+
+    testWidgets('pelo toque na aba do mês', (tester) async {
+      await pumpHome(tester, repoComGastos());
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pumpAndSettle();
+      expect(find.text('Mercado'), findsOneWidget);
+
+      await tester.tap(find.text('DEZ/26'));
+      await tester.pumpAndSettle();
+
+      expect(abaAtiva(tester), 1);
+      expect(find.text('Aluguel'), findsOneWidget);
+      expect(find.text('Bônus'), findsNothing);
+    });
+
+    testWidgets('em ganhos, o mês novo também abre em ganhos', (tester) async {
+      await pumpHome(tester, repoComGastos());
+      await tester.tap(find.text('DEZ/26'));
+      await tester.pumpAndSettle();
+
+      expect(abaAtiva(tester), 0);
+      expect(find.text('Bônus'), findsOneWidget);
+    });
+
+    testWidgets('pelo deslize sobre o resumo', (tester) async {
+      await pumpHome(tester, repoComGastos());
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pumpAndSettle();
+
+      await tester.flingFrom(
+        tester.getCenter(find.byType(BalanceResume).last),
+        const Offset(-300, 0),
+        1500,
+      );
+      await tester.pumpAndSettle();
+
+      expect(abaAtiva(tester), 1);
+      expect(find.text('Aluguel'), findsOneWidget);
+    });
+
+    testWidgets('quando a lista de meses cresce', (tester) async {
+      await pumpHome(tester, repoComGastos());
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pumpAndSettle();
+
+      // A nona aba (FEV/26) faz a lista crescer e recria o controlador.
+      for (final mes in [
+        'OUT/26',
+        'SET/26',
+        'AGO/26',
+        'JUL/26',
+        'JUN/26',
+        'MAI/26',
+        'ABR/26',
+        'MAR/26',
+        'FEV/26',
+      ]) {
+        await tester.tap(find.text(mes).first);
+        await tester.pumpAndSettle();
+        expect(abaAtiva(tester), 1, reason: 'a aba mudou em $mes');
+      }
     });
   });
 }
