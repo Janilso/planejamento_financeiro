@@ -217,12 +217,11 @@ class _BalanceTabViewState extends State<BalanceTabView>
                           : (edited) => widget.onEdit!(balance, edited),
                     ),
                   ),
-                  name: balance.isInstallmented
-                      ? '${balance.name} - ${balance.installment}/${balance.totalInstallments}'
-                      : balance.name,
+                  name: balance.name,
+                  subtitle: balanceSubtitle(balance),
                   value: balance.value,
                   isDanger: !isGain,
-                  isDot: !balance.realized,
+                  realized: balance.realized,
                 ),
                 if (index != visible.length)
                   const Divider(color: AppColors.grayLight, height: 0),

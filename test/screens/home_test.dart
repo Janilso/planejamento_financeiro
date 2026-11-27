@@ -164,7 +164,7 @@ void main() {
     );
 
     Future<void> swipeTv(WidgetTester tester) async {
-      await tester.drag(find.text('TV - 2/3'), const Offset(-700, 0));
+      await tester.drag(find.text('TV'), const Offset(-700, 0));
       await tester.pumpAndSettle();
     }
 
@@ -199,7 +199,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repo.calls, isEmpty);
-      expect(find.text('TV - 2/3'), findsOneWidget);
+      expect(find.text('TV'), findsOneWidget);
     });
 
     testWidgets('falha na API mantém o item e avisa', (tester) async {
@@ -210,7 +210,7 @@ void main() {
       await tester.tap(find.text('Só esta parcela'));
       await tester.pumpAndSettle();
 
-      expect(find.text('TV - 2/3'), findsOneWidget);
+      expect(find.text('TV'), findsOneWidget);
       expect(find.text('Não foi possível excluir'), findsOneWidget);
     });
   });
@@ -241,7 +241,7 @@ void main() {
     );
 
     Future<void> openTv(WidgetTester tester) async {
-      await tester.tap(find.text('TV - 2/3'));
+      await tester.tap(find.text('TV'));
       await tester.pumpAndSettle();
     }
 

@@ -2,71 +2,88 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/extensions/string.dart';
+import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/widgets/balance/enum.dart';
+
+// "Parcela 2 de 3 · Recebido": a parcela (só em parcelado) e o status em texto.
+String balanceSubtitle(BalanceModel balance) {
+  final String status;
+  if (!balance.realized) {
+    status = 'Previsto';
+  } else {
+    status = balance.type == TypeBalance.expenses ? 'Pago' : 'Recebido';
+  }
+  return [
+    if (balance.isInstallmented)
+      'Parcela ${balance.installment} de ${balance.totalInstallments}',
+    status,
+  ].join(' · ');
+}
 
 class Balance extends StatelessWidget {
   final String name;
+  final String? subtitle;
   final double? value;
   final bool isDanger;
-  final bool isDot;
+  final bool realized;
   final GestureTapCallback? onTap;
 
   const Balance({
     super.key,
     required this.name,
+    this.subtitle,
     this.value,
     this.isDanger = false,
-    this.isDot = false,
+    this.realized = true,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      onTap: onTap,
-      leading: Stack(
-        children: [
-          Container(
-            width: 35,
-            height: 35,
-            decoration: BoxDecoration(
-              color: isDanger
-                  ? AppColors.secondaryLight
-                  : AppColors.primaryLight,
-              borderRadius: const BorderRadius.all(Radius.circular(35)),
-            ),
-            child: Icon(
-              AppIcons.dollar,
-              size: 20,
-              color: isDanger ? AppColors.secondary : AppColors.primary,
-            ),
+    final Color tone = isDanger ? AppColors.secondary : AppColors.primary;
+    final textTheme = Theme.of(context).textTheme;
+    // Toque na cor do tipo e retangular, do tamanho da linha.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: tone.withAlpha(31),
+        highlightColor: tone.withAlpha(20),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isDanger ? AppColors.secondaryLight : AppColors.primaryLight,
+            shape: BoxShape.circle,
           ),
-          if (isDot)
-            Positioned(
-              top: 3,
-              right: 3,
-              child: Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: isDanger ? AppColors.secondary : AppColors.primary,
-                  borderRadius: const BorderRadius.all(Radius.circular(35)),
+          child: Icon(
+            realized ? AppIcons.check : AppIcons.clock,
+            size: 20,
+            color: tone,
+          ),
+        ),
+        title: Text(
+          name.capitalize(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textTheme.bodyLarge,
+        ),
+        subtitle: subtitle == null
+            ? null
+            : Text(
+                subtitle!,
+                style: textTheme.bodySmall!.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
-            ),
-        ],
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      title: Text(
-        name.capitalize(),
-        style: Theme.of(context).textTheme.bodyMedium!
-            .copyWith(color: AppColors.black),
-      ),
-      trailing: Text(
-        AppFormats.valueToMoney(value),
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-          color: isDanger ? AppColors.secondary : AppColors.primary,
+        trailing: Text(
+          AppFormats.valueToMoney(value),
+          style: textTheme.bodyLarge!.copyWith(
+            color: tone,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
       ),
     );
