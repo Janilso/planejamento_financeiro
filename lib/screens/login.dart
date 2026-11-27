@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/images.dart';
@@ -9,6 +10,8 @@ import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/overlay.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -81,24 +84,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: Center(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            AppImage.logoWhite(width: 168, height: 117),
-            const SizedBox(height: 12),
-          ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: onBrandOverlay,
+      child: Scaffold(
+        backgroundColor: AppColors.primary,
+        body: Center(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              AppImage.logoWhite(width: 168, height: 117),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 64, left: 44, right: 44),
-        child: AppButton(
-          text: 'ENTRAR / CADASTRAR',
-          icon: AppIcons.google,
-          loading: loading,
-          onPressed: _loginWithGoogle,
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.only(
+            bottom: AppSpacing.xxl + AppSpacing.base,
+            left: AppSpacing.xxl,
+            right: AppSpacing.xxl,
+          ),
+          child: AppButton(
+            text: 'ENTRAR / CADASTRAR',
+            icon: AppIcons.google,
+            loading: loading,
+            onPressed: _loginWithGoogle,
+          ),
         ),
       ),
     );

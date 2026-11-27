@@ -30,9 +30,16 @@ dart format --output=none --set-exit-if-changed lib test
 | `repository/auth_test.dart` | Login, `Bearer`, renovação, dois 401 simultâneos com um refresh só, sessão expirada |
 | `repository/session_test.dart` | `hasSession` |
 | `repository/balance_test.dart` | Formato da API, corpo do `POST`, rota da parcela, 409 |
-| `screens/login_test.dart` | Erro no login e cancelamento |
+| `screens/login_test.dart` | Erro no login (acima do botão), cancelamento e botão em 320 dp |
 | `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha) e edição (valor total, realizado por parcela, nome) |
-| `widget_test.dart` | `AppButton` |
+| `widget_test.dart` | `AppButton`, inclusive com ícone em 320 dp |
+| `theme/tokens_test.dart` | Contrastes, a exceção de 3:1 da marca e as escalas de espaçamento e raio |
+| `theme/theme_test.dart` | Escala de texto, `ColorScheme` e temas de diálogo, campos, SnackBar e modal |
+| `widgets/balance_test.dart` | Subtítulo, ícone de status, valor e toque do item |
+| `widgets/balance_resume_test.dart` | "Falta receber/pagar", balanço negativo e valores enormes |
+| `widgets/balance_tab_view_test.dart` | Mês vazio, espaço para o +, arraste e abas de 48 dp |
+| `widgets/delete_dialog_test.dart` | Opções, textos, cor de perigo e acessibilidade do diálogo de excluir |
+| `widgets/form_balance_test.dart` | Título, estilo único dos valores, contador, Excluir pela edição e acessibilidade |
 
 ## Padrões
 

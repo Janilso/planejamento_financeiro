@@ -31,7 +31,7 @@ class _AppLoadState extends State<AppLoad> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final double size = widget.size;
     final Color color = widget.color;
-    final Color ringColor = CupertinoColors.black.withAlpha(30);
+    final Color ringColor = AppColors.black.withAlpha(30);
     final double strokeWidth = size / 7;
 
     return SizedBox(
