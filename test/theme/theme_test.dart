@@ -66,6 +66,11 @@ void main() {
       FloatingLabelBehavior.always,
     );
     expect(th.inputDecorationTheme.errorStyle!.color, AppColors.danger);
+    // A linha reservada para o erro tem a altura da linha de erro.
+    final ajuda = th.inputDecorationTheme.helperStyle!;
+    final erro = th.inputDecorationTheme.errorStyle!;
+    expect(ajuda.fontSize, erro.fontSize);
+    expect(ajuda.height, erro.height);
     expect(th.snackBarTheme.behavior, SnackBarBehavior.floating);
     expect(th.bottomSheetTheme.backgroundColor, AppColors.white);
   });

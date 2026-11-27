@@ -73,7 +73,13 @@ class AppFormField extends StatelessWidget {
           name: name,
           inputFormatters: inputFormatters,
           autofocus: autofocus,
-          decoration: InputDecoration(hintText: hintText, labelText: label),
+          // helperText em branco reserva a linha do erro: os erros de
+          // validação aparecem sem empurrar o formulário.
+          decoration: InputDecoration(
+            hintText: hintText,
+            labelText: label,
+            helperText: ' ',
+          ),
           controller: controller,
           maxLength: maxLength,
           buildCounter: _counter,

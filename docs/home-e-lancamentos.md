@@ -84,6 +84,7 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 - **Título:** "Novo ganho/gasto" ou "Editar ganho/gasto".
 - **Um estilo só para os valores digitados:** Nome, Valor e o número de Parcelas usam `formValueStyle` (18 sp, regular, texto principal). O rótulo dos campos de texto fica sempre acima e o texto à esquerda.
 - **Contador:** "n/30" só aparece nos 5 últimos caracteres antes do limite.
+- **Erros de validação sem pulo:** Nome e Valor reservam a linha do erro (`helperText: ' '`, com `helperStyle` igual ao `errorStyle`). Ao tocar em Salvar com campos vazios, as mensagens aparecem sem mudar a altura do modal. Custo: o formulário fica duas linhas mais alto que antes, mesmo sem erro.
 - **Excluir pela edição:** o botão "Excluir" (só na edição) abre o mesmo diálogo do arraste e chama `onDelete(onlyInstallment)`. Se falhar, o modal fica aberto e mostra "Não foi possível excluir".
 - O cursor, o puxador e a seleção seguem a cor do tipo.
 - O botão "Salvar" fica sem ícone, em carregando, e não responde a toques repetidos até a resposta chegar.
