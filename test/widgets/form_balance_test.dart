@@ -168,4 +168,14 @@ void main() {
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     handle.dispose();
   });
+
+  testWidgets('o foco do campo usa a cor do tipo', (tester) async {
+    await open(tester, const FormBalance(typeBalance: 'expenses'));
+    final theme = Theme.of(
+      tester.element(find.byType(FormBuilderTextField).first),
+    );
+    final focus =
+        theme.inputDecorationTheme.focusedBorder! as UnderlineInputBorder;
+    expect(focus.borderSide.color, AppColors.secondary);
+  });
 }

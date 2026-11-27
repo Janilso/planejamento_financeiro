@@ -42,6 +42,24 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       foregroundColor: AppColors.white,
     ),
+    // Desligado, o switch precisa aparecer sobre o branco (3:1). Ligado, as
+    // cores vêm do tipo, definidas em cada campo.
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? null
+            : AppColors.textSecondary,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? null : AppColors.white,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? Colors.transparent
+            : AppColors.textSecondary,
+      ),
+    ),
   );
 
   static const ColorScheme colorScheme = ColorScheme.light(
@@ -90,18 +108,27 @@ class AppTheme {
         borderSide: BorderSide(color: color, width: width),
       );
 
+  // Rótulo do campo: escuro, e no vermelho de perigo quando há erro.
+  static WidgetStateTextStyle get _labelStyle =>
+      WidgetStateTextStyle.resolveWith(
+        (states) => textTheme.labelMedium!.copyWith(
+          fontWeight: FontWeight.w600,
+          color: states.contains(WidgetState.error)
+              ? AppColors.danger
+              : AppColors.black,
+        ),
+      );
+
   // Rótulo sempre acima do campo; erro no vermelho de perigo.
   static InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
     floatingLabelBehavior: FloatingLabelBehavior.always,
-    labelStyle: textTheme.labelMedium!.copyWith(fontWeight: FontWeight.w600),
-    floatingLabelStyle: textTheme.labelMedium!.copyWith(
-      fontWeight: FontWeight.w600,
-    ),
+    labelStyle: _labelStyle,
+    floatingLabelStyle: _labelStyle,
     hintStyle: textTheme.bodyLarge!.copyWith(color: AppColors.hint),
     errorStyle: textTheme.labelSmall!.copyWith(color: AppColors.danger),
     border: _underline(AppColors.grayLight),
     enabledBorder: _underline(AppColors.grayLight),
-    focusedBorder: _underline(AppColors.grayLight, 2),
+    focusedBorder: _underline(AppColors.textSecondary, 2),
     errorBorder: _underline(AppColors.danger),
     focusedErrorBorder: _underline(AppColors.danger, 2),
   );

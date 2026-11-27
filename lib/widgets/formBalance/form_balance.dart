@@ -139,8 +139,15 @@ class _FormBalanceState extends State<FormBalance> {
     final Color tone = isGain ? AppColors.primary : AppColors.secondary;
     final textTheme = Theme.of(context).textTheme;
     // Cursor, puxador e seleção na cor do tipo.
+    final theme = Theme.of(context);
     return Theme(
-      data: Theme.of(context).copyWith(
+      data: theme.copyWith(
+        // O foco do campo também usa a cor do tipo.
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: tone, width: 2),
+          ),
+        ),
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: tone,
           selectionHandleColor: tone,

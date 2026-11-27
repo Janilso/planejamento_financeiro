@@ -3,6 +3,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 
+import '../helpers.dart';
+
 void main() {
   final t = AppTheme.defaultTheme.textTheme;
 
@@ -67,4 +69,39 @@ void main() {
     expect(th.snackBarTheme.behavior, SnackBarBehavior.floating);
     expect(th.bottomSheetTheme.backgroundColor, AppColors.white);
   });
+
+  test('switch desligado é visível (3:1 sobre branco)', () {
+    final sw = th.switchThemeOrNull();
+    for (final c in [
+      sw.thumbColor!.resolve({}),
+      sw.trackOutlineColor!.resolve({}),
+    ]) {
+      expect(
+        contrastRatio(Color.alphaBlend(c!, AppColors.white), AppColors.white),
+        greaterThanOrEqualTo(3),
+      );
+    }
+  });
+
+  test('rótulo do campo fica em perigo quando há erro', () {
+    final label = th.inputDecorationTheme.labelStyle! as WidgetStateTextStyle;
+    expect(label.resolve({WidgetState.error}).color, AppColors.danger);
+    expect(label.resolve({}).color, AppColors.black);
+  });
+
+  test('foco do campo aparece (3:1 sobre branco)', () {
+    final focus =
+        th.inputDecorationTheme.focusedBorder! as UnderlineInputBorder;
+    expect(
+      contrastRatio(
+        Color.alphaBlend(focus.borderSide.color, AppColors.white),
+        AppColors.white,
+      ),
+      greaterThanOrEqualTo(3),
+    );
+  });
+}
+
+extension on ThemeData {
+  SwitchThemeData switchThemeOrNull() => switchTheme;
 }

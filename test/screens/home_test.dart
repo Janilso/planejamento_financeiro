@@ -196,6 +196,10 @@ void main() {
     tester,
   ) async {
     final repo = FakeBalanceRepository(data: {});
+    // Tela de celular, não os 800x600 padrão do teste.
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     Widget app(double scale) => MaterialApp(
       theme: AppTheme.defaultTheme,
       locale: const Locale('pt', 'BR'),
@@ -219,8 +223,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final nov = tester.getRect(find.text('NOV/26'));
-    final tela = tester.getRect(find.byType(Scaffold));
-    expect(tela.contains(nov.center), isTrue);
+    final abas = tester.getRect(find.byType(TabBar).first);
+    expect(abas.contains(nov.center), isTrue);
   });
 
   group('arrastar para excluir', () {
