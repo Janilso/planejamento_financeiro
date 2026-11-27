@@ -173,7 +173,7 @@ void main() {
       await pumpHome(tester, repo);
       await swipeTv(tester);
 
-      await tester.tap(find.text('Só esta parcela'));
+      await tester.tap(find.text('Só esta'));
       await tester.pumpAndSettle();
 
       expect(repo.calls, ['deleteInstallment abc 2']);
@@ -184,7 +184,7 @@ void main() {
       await pumpHome(tester, repo);
       await swipeTv(tester);
 
-      await tester.tap(find.text('Todas as parcelas'));
+      await tester.tap(find.text('Todas'));
       await tester.pumpAndSettle();
 
       expect(repo.calls, ['deleteBalance abc']);
@@ -207,7 +207,7 @@ void main() {
       await pumpHome(tester, repo);
       await swipeTv(tester);
 
-      await tester.tap(find.text('Só esta parcela'));
+      await tester.tap(find.text('Só esta'));
       await tester.pumpAndSettle();
 
       expect(find.text('TV'), findsOneWidget);

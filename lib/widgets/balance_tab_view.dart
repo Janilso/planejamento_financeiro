@@ -5,6 +5,7 @@ import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance/balance.dart';
 import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/base_modal.dart';
+import 'package:planejamento_financeiro/widgets/delete_dialog.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
 import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
@@ -50,32 +51,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
   }
 
   Future<bool> _confirmDelete(BalanceModel balance) async {
-    final onlyInstallment = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Excluir "${balance.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          if (balance.isInstallmented) ...[
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Todas as parcelas'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Só esta parcela'),
-            ),
-          ] else
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Excluir'),
-            ),
-        ],
-      ),
-    );
+    final onlyInstallment = await confirmDeleteBalance(context, balance);
     if (onlyInstallment == null || widget.onDelete == null) return false;
     try {
       await widget.onDelete!(balance, onlyInstallment: onlyInstallment);

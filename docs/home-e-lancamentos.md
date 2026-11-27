@@ -38,12 +38,14 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 - **Tocar** abre o formulário de edição.
 - **Arrastar para a esquerda** pede confirmação:
 
-  | Lançamento | Opções | Chamada |
-  |---|---|---|
-  | Parcelado | "Só esta parcela" | `deleteInstallment(id, parcela)` |
-  | Parcelado | "Todas as parcelas" | `deleteBalance(id)` |
-  | À vista | "Excluir" | `deleteBalance(id)` |
-  | Qualquer um | "Cancelar" | nada; o item volta ao lugar |
+  | Lançamento | Texto do diálogo | Opções | Chamada |
+  |---|---|---|---|
+  | Parcelado | "Este lançamento tem N parcelas. Você pode excluir só a parcela n ou todas." | "Só esta" | `deleteInstallment(id, parcela)` |
+  | Parcelado | (o mesmo) | "Todas" | `deleteBalance(id)` |
+  | À vista | "Esta ação não pode ser desfeita." | "Excluir" | `deleteBalance(id)` |
+  | Qualquer um | | "Cancelar" | nada; o item volta ao lugar |
+
+  O diálogo fica em `lib/widgets/delete_dialog.dart` (`confirmDeleteBalance`); as ações destrutivas aparecem no vermelho de perigo.
 
 - **Se a API falhar**, o item **continua na lista** e aparece "Não foi possível excluir".
 - Depois de uma exclusão que deu certo, o item sai da lista na hora (conjunto `_removed`), antes de a recarga chegar: o Flutter não aceita um `Dismissible` arrastado continuar na árvore. A chave de cada item é `id-parcela`.
