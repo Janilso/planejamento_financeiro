@@ -113,6 +113,41 @@ Um em cada cinco lançamentos é parcelado em 10x, com as parcelas nos meses seg
 
 O `tool/perf_resumo.dart` classifica cada fluxo do `pesado`: `reprovado` (falha e fica pelo menos 20% pior que o `leve`), `limite` (falha, mas perto do `leve`), `já existe` (o `leve` também falha) ou `✅`. O `extremo` só usa o critério absoluto. Além dos quadros, o relatório traz `abrir_ms` (do GET liberado até o resumo aparecer) e `conversao` (`decode_ms` e `fromMap_ms`, na thread principal, de cada volume).
 
+### Linha de base com volume (2026-11-27)
+
+Android a 120 Hz, profile, mediana de 3 rodadas, valores em ms (`tool/perf_resumo.dart`):
+
+| Volume | Fluxo | p99 build | p99 raster | Pior build | Pior raster | Resultado |
+|---|---|---|---|---|---|---|
+| leve | abrir | 13,02 | 1,20 | 13,02 | 1,20 | — |
+| leve | troca_mes_perto | 14,18 | 4,45 | 33,95 | 6,34 | — |
+| leve | troca_mes_longe | 9,39 | 3,68 | 27,63 | 12,83 | — |
+| leve | troca_tipo | 10,13 | 3,55 | 12,19 | 4,85 | — |
+| leve | rolar_lista | 3,31 | 4,41 | 3,77 | 8,37 | — |
+| leve | salvar | 6,65 | 4,12 | 7,76 | 4,25 | — |
+| pesado | abrir | 4,78 | 3,23 | 6,70 | 3,24 | ✅ |
+| pesado | troca_mes_perto | 11,83 | 3,84 | 30,40 | 4,88 | já existe |
+| pesado | troca_mes_longe | 12,61 | 4,02 | 34,88 | 5,03 | já existe |
+| pesado | troca_tipo | 10,07 | 3,98 | 15,14 | 4,63 | já existe |
+| pesado | rolar_lista | 3,57 | 3,77 | 12,31 | 12,00 | ✅ |
+| pesado | salvar | 5,16 | 3,88 | 8,20 | 3,92 | ✅ |
+| extremo | abrir | 1,16 | 2,86 | 7,72 | 3,04 | ✅ |
+| extremo | troca_mes_perto | 14,60 | 4,00 | 33,30 | 4,90 | ❌ |
+| extremo | troca_mes_longe | 12,97 | 3,97 | 35,61 | 5,08 | ❌ |
+| extremo | troca_tipo | 10,14 | 3,86 | 12,14 | 4,13 | ❌ |
+| extremo | rolar_lista | 3,58 | 4,13 | 8,43 | 11,28 | ✅ |
+| extremo | salvar | 6,45 | 3,38 | 11,36 | 3,66 | ✅ |
+
+| Volume | `abrir_ms` (GET liberado até o resumo) | Decodificar o JSON | `fromMap` (thread principal) |
+|---|---|---|---|
+| leve | 23 | 1,39 | 1,82 |
+| pesado | 49 | 9,39 | 10,05 |
+| extremo | 95 | 21,27 | 22,32 |
+
+- **Os problemas de troca de mês e de tipo não dependem do volume:** o `leve` (poucos itens) tem os mesmos números do `pesado` e do `extremo`. Os piores quadros de 30 a 35 ms na troca de mês coincidem com a lista de abas crescendo (a cada 12 meses, a home inteira é reconstruída e o `TabController` é recriado).
+- **O `fromMap` bloqueia a thread principal por 10 ms no `pesado` e 22 ms no `extremo`.** Os quadros de `abrir` e `salvar` não mostram isso, porque o `FrameTiming` mede o `build` de cada quadro, não o intervalo perdido enquanto a thread está ocupada. Use a tabela de conversão.
+- O `troca_tipo` no `leve` (p99 10,13) está acima da linha de base antiga das animações (8,16): o `leve` já tem 504 itens e as 25 abas de mês, e a home inteira é reconstruída a cada troca de tipo.
+
 ## CI
 
 `.github/workflows/ci.yml` roda em cada pull request e em push na `main`, com Flutter 3.50.1: `flutter pub get`, checagem do `dart format`, `flutter analyze` e `flutter test`.
