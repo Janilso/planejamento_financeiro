@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/theme/texts_style.dart';
 import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
@@ -67,7 +68,7 @@ class InfiniteTabViewState extends State<InfiniteTabView>
         children: [
           TabBar(
             controller: _tabController,
-            labelPadding: EdgeInsets.symmetric(horizontal: 12),
+            labelPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             unselectedLabelStyle: AppTextsStyle.bodyLarge(
@@ -79,7 +80,8 @@ class InfiniteTabViewState extends State<InfiniteTabView>
             ),
             tabs: List.generate(
               widget.length,
-              (index) => Tab(text: widget.buildTabBar!(context, index)),
+              (index) =>
+                  Tab(text: widget.buildTabBar!(context, index), height: 48),
             ),
             indicatorColor: AppColors.white,
             dividerHeight: 0,

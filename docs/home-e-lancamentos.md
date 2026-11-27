@@ -34,9 +34,17 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 
 ## Lista (`lib/widgets/balance_tab_view.dart`)
 
-- Duas abas, GANHOS e GASTOS. Cada item mostra o nome (com "parcela/total" em parcelado), o valor e um ponto quando ainda não foi realizado.
+- Duas abas, GANHOS e GASTOS, com 48 dp de altura.
+- **Cada item** (`lib/widgets/balance/balance.dart`) mostra:
+  - o ícone de status: ✓ quando realizado, relógio quando previsto;
+  - o nome;
+  - o subtítulo de `balanceSubtitle`, como "Parcela 2 de 3 · Recebido", "Pago" ou "Previsto";
+  - o valor na cor do tipo, com algarismos de largura fixa.
+- **O toque** tem a cor do tipo e é retangular.
+- **Mês sem lançamentos:** "Nenhum ganho neste mês" (ou gasto) e "Toque em + para lançar" (`lib/widgets/state_message.dart`).
+- **Fim da lista:** tem 88 dp de espaço, para o último item não ficar atrás do botão +.
 - **Tocar** abre o formulário de edição.
-- **Arrastar para a esquerda** pede confirmação:
+- **Arrastar para a esquerda** mostra um fundo em vermelho de perigo (`#D63A42`), que se destaca do coral de gastos, e pede confirmação:
 
   | Lançamento | Texto do diálogo | Opções | Chamada |
   |---|---|---|---|
