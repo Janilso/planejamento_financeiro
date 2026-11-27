@@ -26,12 +26,12 @@ dart format --output=none --set-exit-if-changed lib test
 | `commons/formats_test.dart` | Conversão de "R$ 1.234,56" para número |
 | `commons/months_test.dart` | Meses sem repetir nem pular, `dateForNewBalance`, `monthKey` |
 | `models/balance_test.dart` | `isInstallmented` |
-| `network/http_client_test.dart` | Headers, params e `patch` |
+| `network/http_client_test.dart` | Headers, params, `patch`, `responseType` e erro em bytes de volta como JSON |
 | `repository/auth_test.dart` | Login, `Bearer`, renovação, dois 401 simultâneos com um refresh só, sessão expirada |
 | `repository/session_test.dart` | `hasSession` |
-| `repository/balance_test.dart` | Formato da API, corpo do `POST`, rota da parcela, 409 |
+| `repository/balance_test.dart` | Formato da API, `parseBalances`, mensagem de erro do `getBalances`, corpo do `POST`, rota da parcela, 409 |
 | `screens/login_test.dart` | Erro no login (acima do botão), cancelamento e botão em 320 dp |
-| `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha) e edição (valor total, realizado por parcela, nome) |
+| `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha), edição (valor total, realizado por parcela, nome), reconstruções da home e recargas fora de ordem |
 | `widget_test.dart` | `AppButton`, inclusive com ícone em 320 dp |
 | `theme/tokens_test.dart` | Contrastes, a exceção de 3:1 da marca e as escalas de espaçamento e raio |
 | `theme/theme_test.dart` | Escala de texto, `ColorScheme` e temas de diálogo, campos, SnackBar e modal |

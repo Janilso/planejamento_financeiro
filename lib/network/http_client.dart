@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:planejamento_financeiro/network/api_config.dart';
@@ -24,7 +25,10 @@ class HttpClient {
       final response = await _client.get(
         request.url,
         queryParameters: request.params,
-        options: Options(headers: request.headers),
+        options: Options(
+          headers: request.headers,
+          responseType: request.responseType,
+        ),
       );
       return _buildResponse(response);
     } on DioException catch (e) {
@@ -88,6 +92,17 @@ class HttpClient {
     }
   }
 
+  // Com ResponseType.bytes o erro também vem em bytes: volta a ser o JSON, para
+  // o repositório achar a `message` da API.
+  Object? _errorBody(Object? data) {
+    if (data is! List<int>) return data;
+    try {
+      return jsonDecode(utf8.decode(data));
+    } catch (_) {
+      return data;
+    }
+  }
+
   ClientResponse _buildResponse(Response response) {
     return ClientResponse(status: response.statusCode, data: response.data);
   }
@@ -95,7 +110,7 @@ class HttpClient {
   ClientResponse _buildException(DioException exception) {
     return ClientResponse(
       status: exception.response?.statusCode ?? 500,
-      data: exception.response?.data,
+      data: _errorBody(exception.response?.data),
       message: exception.message,
       error: exception.error,
     );
@@ -107,8 +122,17 @@ class ClientRequest {
   final Object? body;
   final Map<String, dynamic>? headers;
   final Map<String, dynamic>? params;
+  // ResponseType.bytes entrega o corpo cru, para decodificar fora da thread
+  // principal (veja parseBalances).
+  final ResponseType? responseType;
 
-  ClientRequest({required this.url, this.body, this.headers, this.params});
+  ClientRequest({
+    required this.url,
+    this.body,
+    this.headers,
+    this.params,
+    this.responseType,
+  });
 }
 
 class ClientResponse {

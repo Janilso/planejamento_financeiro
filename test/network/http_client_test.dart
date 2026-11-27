@@ -32,4 +32,28 @@ void main() {
     expect(request.method, 'PATCH');
     expect(request.data, {'name': 'X'});
   });
+
+  test('get repassa o responseType', () async {
+    adapter.responses.add(const FakeResponse(200, {'a': 1}));
+
+    final response = await client.get(
+      ClientRequest(url: '/x', responseType: ResponseType.bytes),
+    );
+
+    expect(adapter.requests.single.responseType, ResponseType.bytes);
+    expect(response.data, isA<List<int>>());
+  });
+
+  test('erro em bytes volta como mapa', () async {
+    adapter.responses.add(const FakeResponse(400, {'message': 'Erro X'}));
+
+    await expectLater(
+      client.get(ClientRequest(url: '/x', responseType: ResponseType.bytes)),
+      throwsA(
+        isA<ClientResponse>()
+            .having((e) => e.status, 'status', 400)
+            .having((e) => e.data['message'], 'message', 'Erro X'),
+      ),
+    );
+  });
 }

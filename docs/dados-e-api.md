@@ -31,6 +31,8 @@
 | `deleteBalance(id)` | `DELETE /balances/:id` |
 | `deleteInstallment(id, n)` | `DELETE /balances/:id/installments/:n` |
 
+**`getBalances` converte fora da thread principal.** Ele pede a resposta em bytes (`ClientRequest.responseType: ResponseType.bytes`) e faz UTF-8, `jsonDecode` e `MonthBalanceModel.fromMap` num isolate (`parseBalancesInBackground`, que usa a função de nível superior `parseBalances`). Com 5 anos de histórico, o `fromMap` leva ~10 ms no celular e travaria a thread principal. As funções ficam no nível superior porque uma closure criada num método do repositório pode levar o `this` (e o Dio) para o isolate, que não os aceita. Uma resposta de erro também vem em bytes: o `HttpClient` a converte de volta em JSON para o `ApiException` achar a `message`.
+
 O contrato completo de cada rota (campos, regras e erros) está no Swagger da API, em `/docs`.
 
 ## Erros

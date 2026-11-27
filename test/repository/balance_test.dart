@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
@@ -106,5 +109,47 @@ void main() {
             ),
       ),
     );
+  });
+
+  test('erro no getBalances mantém a mensagem da API', () async {
+    adapter.responses.add(
+      const FakeResponse(400, {'message': 'Algo deu errado'}),
+    );
+
+    await expectLater(
+      repository.getBalances(),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.status, 'status', 400)
+            .having((e) => e.message, 'message', 'Algo deu errado'),
+      ),
+    );
+  });
+
+  test('parseBalances lê UTF-8 com acentos', () {
+    final bytes = Uint8List.fromList(
+      utf8.encode(
+        jsonEncode({
+          'NOV/26': {
+            'gains': [
+              {
+                'id': 'a',
+                'name': 'Salário à vista',
+                'value': 10,
+                'realized': true,
+                'installment': 1,
+                'totalInstallments': 1,
+                'type': 'gains',
+              },
+            ],
+            'expenses': [],
+          },
+        }),
+      ),
+    );
+
+    final result = parseBalances(bytes);
+
+    expect(result.months['NOV/26']!.gains.single.name, 'Salário à vista');
   });
 }
