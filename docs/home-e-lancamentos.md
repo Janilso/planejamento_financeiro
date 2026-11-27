@@ -41,7 +41,8 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 - **Avisos de sucesso:** uma SnackBar com "Lançamento salvo" (criar ou editar) ou "Lançamento excluído" (pela lista ou pela edição). Excluir com falha mantém o item e mostra "Não foi possível excluir".
 - **Fonte do sistema:** o layout funciona até 130%. As abas de mês voltam a mostrar o mês selecionado quando a escala muda com a tela aberta (`TabBar` com `key` da escala).
 - **Resumo** (`lib/widgets/balance_resume.dart`): ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
-  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto, e somem quando não falta nada.
+  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto e ficam em branco quando não falta nada.
+  - **Altura fixa:** a linha de apoio de cada bloco (inclusive a de "Gastos acima dos ganhos") sempre ocupa o seu espaço, em branco quando não há aviso (`ResumeMoney`). Assim o cabeçalho tem a mesma altura em todos os meses e a lista não dá um degrau ao deslizar de um mês para outro. Limite: a reserva é de uma linha; se o aviso quebrar em duas (valor muito grande ou fonte do sistema grande), a altura volta a variar.
   - Com o balanço negativo, aparece "Gastos acima dos ganhos" embaixo do valor.
   - Os valores encolhem (`FittedBox`) em vez de estourar quando são muito grandes.
 

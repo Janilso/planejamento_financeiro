@@ -5,6 +5,7 @@ import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 import 'package:planejamento_financeiro/widgets/balance_resume.dart';
+import 'package:planejamento_financeiro/widgets/resume_money.dart';
 
 import '../helpers.dart';
 
@@ -18,8 +19,9 @@ void main() {
     WidgetTester tester, {
     List<BalanceModel> gains = const [],
     List<BalanceModel> expenses = const [],
+    Size size = const Size(360, 800),
   }) async {
-    tester.view.physicalSize = const Size(360, 800);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
@@ -55,6 +57,38 @@ void main() {
   testWidgets('esconde quando não falta nada', (tester) async {
     await pump(tester, gains: [item(5000)], expenses: [item(650)]);
     expect(find.textContaining('Falta'), findsNothing);
+  });
+
+  testWidgets('o resumo termina no mesmo ponto com ou sem avisos', (
+    tester,
+  ) async {
+    Future<double> altura({
+      List<BalanceModel> gains = const [],
+      List<BalanceModel> expenses = const [],
+    }) async {
+      // Largura que não quebra os avisos na fonte Ahem dos testes.
+      await pump(
+        tester,
+        gains: gains,
+        expenses: expenses,
+        size: const Size(800, 600),
+      );
+      // O Column do resumo ocupa a altura que recebe; onde termina o último
+      // bloco (o balanço) soma a altura de tudo o que está acima dele.
+      return tester.getRect(find.byType(ResumeMoney).last).bottom;
+    }
+
+    // Sem nenhum aviso: nada a receber, nada a pagar, balanço positivo.
+    final semAvisos = await altura(gains: [item(5000)], expenses: [item(650)]);
+    // "Falta receber", "Falta pagar" e "Gastos acima dos ganhos" ao mesmo tempo.
+    final comAvisos = await altura(
+      gains: [item(100), item(1200, realized: false)],
+      expenses: [item(2000), item(120, realized: false)],
+    );
+
+    expect(find.textContaining('Falta receber'), findsOneWidget);
+    expect(find.text('Gastos acima dos ganhos'), findsOneWidget);
+    expect(comAvisos, semAvisos);
   });
 
   testWidgets('balanço negativo avisa em texto', (tester) async {

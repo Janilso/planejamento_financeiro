@@ -394,6 +394,39 @@ void main() {
     });
   });
 
+  testWidgets('o cartão da lista fica na mesma altura em todos os meses', (
+    tester,
+  ) async {
+    // Nos testes a fonte é a Ahem, mais larga que a WorkSans: na tela padrão
+    // (800 dp) os avisos não quebram de linha e só a altura reservada conta.
+    final repo = FakeBalanceRepository(
+      data: {
+        // NOV/26 tem "Falta receber" e "Falta pagar".
+        'NOV/26': {
+          'gains': [balanceJson('Freela', 1200, 'gains', realized: false)],
+          'expenses': [
+            balanceJson('Internet', 120, 'expenses', realized: false),
+          ],
+        },
+        // DEZ/26 não tem nenhum aviso.
+        'DEZ/26': {
+          'gains': [
+            balanceJson('Bônus', 700, 'gains', date: '2026-12-15T12:00:00.000'),
+          ],
+          'expenses': [],
+        },
+      },
+    );
+    await pumpHome(tester, repo);
+    final topoNov = tester.getTopLeft(find.byType(BalanceTabView)).dy;
+
+    await tester.tap(find.text('DEZ/26'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Falta'), findsNothing);
+    expect(tester.getTopLeft(find.byType(BalanceTabView)).dy, topoNov);
+  });
+
   group('páginas de mês sem piscar o loader', () {
     FakeBalanceRepository repoComMeses() => FakeBalanceRepository(
       data: {
