@@ -111,6 +111,37 @@ void main() {
     expect(find.text('26/30'), findsOneWidget);
   });
 
+  testWidgets('erros de validação não mudam a altura do formulário', (
+    tester,
+  ) async {
+    await open(tester, FormBalance(onSubmit: (_) async {}));
+    final antes = tester.getSize(find.byType(FormBalance)).height;
+
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    // Nome e Valor mostram "Este campo não pode ficar vazio.".
+    expect(find.textContaining('vazio'), findsNWidgets(2));
+    expect(tester.getSize(find.byType(FormBalance)).height, antes);
+  });
+
+  testWidgets('a linha de erro reservada não estoura com fonte em 130%', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await open(tester, FormBalance(onSubmit: (_) async {}));
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('vazio'), findsNWidgets(2));
+  });
+
   testWidgets('Salvar sem ícone', (tester) async {
     await open(tester, const FormBalance());
     expect(

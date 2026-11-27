@@ -20,13 +20,15 @@
 
 Não há barra de título: o mês fica só nas abas e o topo usa a cor do tipo, até a barra de status. O menu ⋮ ("Mais opções") tem o item "Sair", que abre o diálogo "Sair da conta?" ("Seus lançamentos continuam salvos."), com "Sair" no vermelho de perigo.
 
-A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F7646C`) para gastos.
+A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F7646C`) para gastos, acompanhando o dedo no arraste e a animação do toque na aba (detalhes em `docs/tema-e-layout.md`).
 
 ## Meses (`lib/commons/months.dart`)
 
 - **Sempre no dia 1.** Manter o dia de hoje (31, por exemplo) faria o `DateTime` pular para o mês seguinte e repetir ou sumir meses.
 - `monthsAround(hoje)` monta 12 meses para trás, o atual e 12 para frente.
 - **Abas infinitas** (`HomeScreen._handleChangeMonth`): ao chegar a 4 abas de uma das pontas, o app acrescenta mais 12 meses daquele lado (`monthsBefore`/`monthsAfter`) e mantém o mês selecionado.
+- **Sem quique:** a troca de mês usa a física padrão do `TabBarView` (mola com razão de amortecimento 1,1). A mola customizada anterior (razão 0,71) passava ~22 px do destino e deixava ver uma faixa do mês seguinte; as abas GANHOS/GASTOS nunca quicaram, porque só têm duas páginas e o destino é sempre uma ponta.
+- **A aba de tipo se mantém:** ao trocar de mês (toque na aba, deslize sobre o resumo ou lista que cresce), o mês novo abre na mesma aba, GANHOS ou GASTOS, em que a pessoa estava. A home guarda a aba em `typeBalancePage` e a passa à página nova (`BalanceTabView.initialType`); ela não volta mais para ganhos.
 - `monthKey(mês)` gera a chave `MMM/yy` em pt-BR, maiúsculas e sem ponto (`NOV/26`), **igual à da API**: é por ela que cada aba acha os seus lançamentos.
 - `dateForNewBalance(mêsDaAba, hoje)`: lançamento novo no mês atual usa a data de hoje; em outro mês, usa o mesmo dia de hoje limitado ao último dia daquele mês (31/01 → 28/02).
 
@@ -34,11 +36,13 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 
 - A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
 - Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
+- **Sem piscar o loader:** a home guarda o último resultado (`_lastBalances`) e o passa como `initialData` ao `FutureBuilder` de cada página. Páginas que nascem depois (troca de mês, ou a lista de meses que cresce) já mostram a lista; só o primeiro carregamento mostra o `AppLoad`. Ao chegar o resultado, a home se reconstrói (`setState`), porque o `InfiniteTabView` cria os `FutureBuilder` de todos os meses no `build` e o `TabBarView` só os monta depois, guardando o `initialData` daquele momento.
 - **Erro na busca:** um cartão branco com ícone, "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre. O botão + fica desativado até a busca dar certo.
 - **Avisos de sucesso:** uma SnackBar com "Lançamento salvo" (criar ou editar) ou "Lançamento excluído" (pela lista ou pela edição). Excluir com falha mantém o item e mostra "Não foi possível excluir".
 - **Fonte do sistema:** o layout funciona até 130%. As abas de mês voltam a mostrar o mês selecionado quando a escala muda com a tela aberta (`TabBar` com `key` da escala).
 - **Resumo** (`lib/widgets/balance_resume.dart`): ganhos, gastos e balanço (ganhos − gastos) do mês, somando todos os itens, realizados ou não.
-  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto, e somem quando não falta nada.
+  - "Falta receber R$ X" e "Falta pagar R$ X" somam só o que ainda está previsto e ficam em branco quando não falta nada.
+  - **Altura fixa:** a linha de apoio de cada bloco (inclusive a de "Gastos acima dos ganhos") sempre ocupa o seu espaço, em branco quando não há aviso (`ResumeMoney`). Assim o cabeçalho tem a mesma altura em todos os meses e a lista não dá um degrau ao deslizar de um mês para outro. Limite: a reserva é de uma linha; se o aviso quebrar em duas (valor muito grande ou fonte do sistema grande), a altura volta a variar.
   - Com o balanço negativo, aparece "Gastos acima dos ganhos" embaixo do valor.
   - Os valores encolhem (`FittedBox`) em vez de estourar quando são muito grandes.
 
@@ -80,6 +84,7 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 - **Título:** "Novo ganho/gasto" ou "Editar ganho/gasto".
 - **Um estilo só para os valores digitados:** Nome, Valor e o número de Parcelas usam `formValueStyle` (18 sp, regular, texto principal). O rótulo dos campos de texto fica sempre acima e o texto à esquerda.
 - **Contador:** "n/30" só aparece nos 5 últimos caracteres antes do limite.
+- **Erros de validação sem pulo:** Nome e Valor reservam a linha do erro (`helperText: ' '`, com `helperStyle` igual ao `errorStyle`). Ao tocar em Salvar com campos vazios, as mensagens aparecem sem mudar a altura do modal. Custo: o formulário fica duas linhas mais alto que antes, mesmo sem erro.
 - **Excluir pela edição:** o botão "Excluir" (só na edição) abre o mesmo diálogo do arraste e chama `onDelete(onlyInstallment)`. Se falhar, o modal fica aberto e mostra "Não foi possível excluir".
 - O cursor, o puxador e a seleção seguem a cor do tipo.
 - O botão "Salvar" fica sem ícone, em carregando, e não responde a toques repetidos até a resposta chegar.

@@ -48,6 +48,32 @@ dart format --output=none --set-exit-if-changed lib test
 - **`AppLoad` tem animação infinita:** enquanto ele estiver na tela, use `pump()`. O `pumpAndSettle()` estoura o tempo esperando a animação acabar.
 - **Localizações:** os testes de widget montam o `MaterialApp` com `GlobalMaterialLocalizations` e `FormBuilderLocalizations`, como o app.
 
+## Desempenho das animações (profile)
+
+`integration_test/animacoes_perf_test.dart` mede os quadros da home no **celular**, em modo profile, com o dublê do repositório (sem login nem rede). Cada fluxo usa `binding.watchPerformance`: troca de mês (deslizar sobre o resumo), troca GANHOS/GASTOS (deslizar no espaço vazio da lista) e abrir/fechar o modal. Não roda no `flutter test` nem no CI.
+
+```sh
+flutter drive --profile --no-dds -d <celular> \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/animacoes_perf_test.dart
+```
+
+- O resultado fica em `build/integration_response_data.json`: média, p90, p99 e pior quadro de build e raster, e a contagem de quadros perdidos de cada fluxo.
+- **`--no-dds` é obrigatório.** Sem ele o teste falha com "Failed to connect to VM Service".
+- **O `flutter drive` reinstala o app e apaga a sessão guardada:** depois dele o app abre no login e é preciso tocar no seletor de conta do Google.
+- O contador de "quadros perdidos" usa 16 ms fixos. No celular de 120 Hz o orçamento é 8,3 ms, então compare o p90 e o p99.
+- O teclado do sistema não entra na medição do modal.
+
+Linha de base de 2026-11-27 (Android a 120 Hz, valores em ms; antes das mudanças de animação):
+
+| Fluxo | Quadros | Build média / p90 / p99 / pior | Raster média / p90 / p99 / pior |
+|---|---|---|---|
+| Troca de mês | 642 | 0,76 / 1,32 / 4,68 / 6,35 | 1,06 / 1,42 / 1,92 / 4,13 |
+| GANHOS/GASTOS | 480 | 1,11 / 2,03 / 9,93 / 18,21 | 2,48 / 3,12 / 4,01 / 8,10 |
+| Modal abrir/fechar | 535 | 1,34 / 2,12 / 5,48 / 11,92 | 2,21 / 2,60 / 2,86 / 17,29 |
+
+Depois das mudanças de animação (mola padrão, páginas sem loader, cor animada e linha de erro reservada), a mesma bateria deu números equivalentes: p99 de build de 4,75 / 8,16 / 5,24 ms e p99 de raster de 2,05 / 3,96 / 3,11 ms nos três fluxos. Uma rodada por fluxo: diferenças de média dessa ordem são ruído.
+
 ## CI
 
 `.github/workflows/ci.yml` roda em cada pull request e em push na `main`, com Flutter 3.50.1: `flutter pub get`, checagem do `dart format`, `flutter analyze` e `flutter test`.

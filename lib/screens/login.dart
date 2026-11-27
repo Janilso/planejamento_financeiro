@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/images.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        CupertinoPageRoute(builder: (context) => const HomeScreen()),
+        fadeRoute((context) => const HomeScreen()),
       );
     } catch (error) {
       if (error is GoogleSignInException &&
@@ -92,7 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ListView(
             shrinkWrap: true,
             children: [
-              AppImage.logoWhite(width: 168, height: 117),
+              Hero(
+                tag: logoHeroTag,
+                child: AppImage.logoWhite(width: 168, height: 117),
+              ),
               const SizedBox(height: AppSpacing.md),
             ],
           ),

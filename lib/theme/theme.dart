@@ -126,6 +126,9 @@ class AppTheme {
     floatingLabelStyle: _labelStyle,
     hintStyle: textTheme.bodyLarge!.copyWith(color: AppColors.hint),
     errorStyle: textTheme.labelSmall!.copyWith(color: AppColors.danger),
+    // O campo reserva a linha do erro com um texto em branco; o mesmo estilo
+    // do erro dá à linha reservada a altura exata da linha de erro.
+    helperStyle: textTheme.labelSmall,
     border: _underline(AppColors.grayLight),
     enabledBorder: _underline(AppColors.grayLight),
     focusedBorder: _underline(AppColors.textSecondary, 2),

@@ -1,4 +1,3 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
+import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/commons/months.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
@@ -47,6 +47,12 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<MonthBalanceModel> _balances;
   // A última busca falhou: o botão + fica desativado até carregar de novo.
   bool _loadFailed = false;
+  // O último resultado carregado: páginas novas (troca de mês, lista que
+  // cresce) nascem com ele e não piscam o loader enquanto o Future resolve.
+  MonthBalanceModel? _lastBalances;
+  // A cor do fundo e do botão +: 0 em ganhos, 1 em gastos. Acompanha o dedo e
+  // a animação das abas de tipo.
+  final ValueNotifier<double> _tipo = ValueNotifier(0);
 
   @override
   void initState() {
@@ -65,8 +71,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<MonthBalanceModel> _loadBalances() {
     final future = _balanceRepository.getBalances();
     future.then(
-      (_) {
-        if (mounted && _loadFailed) setState(() => _loadFailed = false);
+      (data) {
+        // Reconstruir aqui é o que leva o resultado às páginas que o
+        // TabBarView ainda não montou: elas guardam o initialData do build.
+        if (!mounted) return;
+        setState(() {
+          _lastBalances = data;
+          _loadFailed = false;
+        });
       },
       onError: (_) {
         if (mounted && !_loadFailed) setState(() => _loadFailed = true);
@@ -96,6 +108,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return monthKey(months[index]);
   }
 
+  void _handleTabProgress(double progress) {
+    _tipo.value = progress.clamp(0.0, 1.0);
+  }
+
   void _handleChangeBalance(String typeBalance) {
     setState(() {
       typeBalancePage = typeBalance;
@@ -121,7 +137,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       months = newMonths;
       actualIndex = newInitialIndex;
-      typeBalancePage = TypeBalance.gains;
     });
   }
 
@@ -215,23 +230,52 @@ class _HomeScreenState extends State<HomeScreen> {
     await GoogleSignIn.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      CupertinoPageRoute(builder: (context) => const LoginScreen()),
+      fadeRoute((context) => const LoginScreen()),
       (route) => false,
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    final bool isGainTab = typeBalancePage == TypeBalance.gains;
-    final Color colorState = isGainTab
-        ? AppColors.primary
-        : AppColors.secondary;
+  void dispose() {
+    _tipo.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: onBrandOverlay,
-      child: Scaffold(
-        backgroundColor: colorState,
-        body: SafeArea(
+      // A cor segue as abas de tipo. O corpo vai como `child`, para não ser
+      // reconstruído a cada quadro.
+      child: ValueListenableBuilder<double>(
+        valueListenable: _tipo,
+        builder: (context, valor, body) {
+          final tone = Color.lerp(
+            AppColors.primary,
+            AppColors.secondary,
+            valor,
+          )!;
+          return Scaffold(
+            backgroundColor: tone,
+            body: body,
+            floatingActionButton: FloatingActionButton(
+              tooltip: 'Novo lançamento',
+              onPressed: _loadFailed
+                  ? null
+                  : () => baseModal(
+                      context,
+                      FormBalance(
+                        typeBalance: typeBalancePage,
+                        onSubmit: _onSubmitCreate,
+                      ),
+                    ),
+              backgroundColor: _loadFailed ? tone.withAlpha(110) : tone,
+              foregroundColor: AppColors.white,
+              child: const Icon(AppIcons.plus),
+            ),
+          );
+        },
+        child: SafeArea(
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
@@ -250,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               buildTabView: (context, index) => FutureBuilder(
                 future: _balances,
+                initialData: _lastBalances,
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Padding(
@@ -287,7 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: BalanceTabView(
                             gainBalances: data?.gains ?? [],
                             expensesBalances: data?.expenses ?? [],
+                            initialType: typeBalancePage,
                             onTabChanged: _handleChangeBalance,
+                            onTabProgress: _handleTabProgress,
                             onEdit: _onSubmitEdit,
                             onDelete: _onDelete,
                           ),
@@ -300,21 +347,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          tooltip: 'Novo lançamento',
-          onPressed: _loadFailed
-              ? null
-              : () => baseModal(
-                  context,
-                  FormBalance(
-                    typeBalance: typeBalancePage,
-                    onSubmit: _onSubmitCreate,
-                  ),
-                ),
-          backgroundColor: _loadFailed ? colorState.withAlpha(110) : colorState,
-          foregroundColor: AppColors.white,
-          child: const Icon(AppIcons.plus),
         ),
       ),
     );

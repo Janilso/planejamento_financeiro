@@ -9,12 +9,17 @@ import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/base_modal.dart';
 import 'package:planejamento_financeiro/widgets/delete_dialog.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
-import 'package:planejamento_financeiro/widgets/infiniteTabelView/custom_tab_bar_view_scroll_physics.dart';
 
 class BalanceTabView extends StatefulWidget {
   final List<BalanceModel> gainBalances;
   final List<BalanceModel> expensesBalances;
+  // A aba que abre primeiro (TypeBalance.gains ou TypeBalance.expenses): a
+  // página do mês novo abre na aba em que a pessoa já está.
+  final String initialType;
   final Function(String typeBalance)? onTabChanged;
+  // Posição das abas durante o toque, o arraste e o assentamento: 0 em ganhos,
+  // 1 em gastos, e valores no meio enquanto o dedo ou a animação se movem.
+  final ValueChanged<double>? onTabProgress;
   final Future<void> Function(BalanceModel original, BalanceModel edited)?
   onEdit;
   // onlyInstallment: true exclui só a parcela; false, o lançamento inteiro.
@@ -23,9 +28,11 @@ class BalanceTabView extends StatefulWidget {
 
   const BalanceTabView({
     super.key,
+    this.initialType = TypeBalance.gains,
     this.gainBalances = const [],
     this.expensesBalances = const [],
     this.onTabChanged,
+    this.onTabProgress,
     this.onEdit,
     this.onDelete,
   });
@@ -71,8 +78,16 @@ class _BalanceTabViewState extends State<BalanceTabView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this)
-      ..addListener(_handleChangePage);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialType == TypeBalance.expenses ? 1 : 0,
+    )..addListener(_handleChangePage);
+    _tabController.animation?.addListener(_handleTabProgress);
+  }
+
+  void _handleTabProgress() {
+    widget.onTabProgress?.call(_tabController.animation!.value);
   }
 
   void _handleChangePage() {
@@ -85,6 +100,7 @@ class _BalanceTabViewState extends State<BalanceTabView>
 
   @override
   void dispose() {
+    _tabController.animation?.removeListener(_handleTabProgress);
     _tabController.dispose();
     super.dispose();
   }
@@ -120,7 +136,6 @@ class _BalanceTabViewState extends State<BalanceTabView>
               margin: const EdgeInsets.only(top: 0),
               child: TabBarView(
                 controller: _tabController,
-                physics: const CustomTabBarViewScrollPhysics(),
                 children: [
                   _buildBalances(context, widget.gainBalances),
                   _buildBalances(context, widget.expensesBalances, false),

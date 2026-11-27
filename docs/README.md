@@ -32,6 +32,7 @@ flowchart LR
 - **Valor R$ 0,00 é aceito no formulário.** A API recusa, e a mensagem dela aparece dentro do modal.
 - **Deslizar na lista troca Ganhos/Gastos, não o mês.** A troca de mês funciona arrastando sobre o resumo ou tocando nas abas.
 - **Contraste das cores da marca:** ganhos (`#44A2A6`) e gastos (`#F7646C`) ficam com 3:1 contra o branco, o que atende o WCAG AA só para texto grande. É uma escolha de identidade (veja [Tema e layout](tema-e-layout.md)); rótulos, abas e valores da lista ficam abaixo de 4,5:1.
+- **Altura do cabeçalho:** a linha de aviso do resumo reserva uma linha. Se o aviso quebrar em duas (valor muito grande ou fonte do sistema grande), a altura volta a variar de um mês para o outro.
 - **Fonte do sistema acima de 130%** não tem suporte: o cabeçalho não rola junto com a lista.
 - Só Android; a assinatura de release ainda usa a chave de debug.
 

@@ -46,10 +46,16 @@ class ResumeMoney extends StatelessWidget {
                 ),
           ),
         ),
-        if (hint != null) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(hint!, style: white, textAlign: align),
-        ],
+        // A linha de apoio sempre ocupa o seu espaço (em branco quando não há
+        // aviso), para o cabeçalho não mudar de altura de um mês para o outro.
+        const SizedBox(height: AppSpacing.xs),
+        Visibility(
+          visible: hint != null,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          child: Text(hint ?? ' ', style: white, textAlign: align),
+        ),
       ],
     );
   }
