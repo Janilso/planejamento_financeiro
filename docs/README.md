@@ -34,6 +34,7 @@ flowchart LR
 - **Contraste das cores da marca:** ganhos (`#44A2A6`) e gastos (`#F7646C`) ficam com 3:1 contra o branco, o que atende o WCAG AA só para texto grande. É uma escolha de identidade (veja [Tema e layout](tema-e-layout.md)); rótulos, abas e valores da lista ficam abaixo de 4,5:1.
 - **Altura do cabeçalho:** a linha de aviso do resumo reserva uma linha. Se o aviso quebrar em duas (valor muito grande ou fonte do sistema grande), a altura volta a variar de um mês para o outro.
 - **Fonte do sistema acima de 130%** não tem suporte: o cabeçalho não rola junto com a lista.
+- **Histórico muito grande:** o app busca todos os meses numa chamada (`GET /balances`), cerca de 90 KB por ano sem compressão e ~10 KB com gzip. Medido no celular com dados sintéticos: até 5 anos (3.724 itens) tudo passa nos critérios; com 10 anos (8.400 itens) a resposta fica em ~113 KB mesmo com gzip e a API em ~190 ms. A busca por janela de meses (mês atual ±3, mais 3 ao chegar ao penúltimo) ficou planejada em `docs/superpowers/plans/2026-11-27-desempenho-da-lista-de-meses.md` (Tasks J1 a J5) e só vale a pena perto desse tamanho. Detalhes e números em [Testes](testes.md).
 - Só Android; a assinatura de release ainda usa a chave de debug.
 
 ## Ideias de evolução

@@ -148,6 +148,26 @@ Android a 120 Hz, profile, mediana de 3 rodadas, valores em ms (`tool/perf_resum
 - **O `fromMap` bloqueia a thread principal por 10 ms no `pesado` e 22 ms no `extremo`.** Os quadros de `abrir` e `salvar` não mostram isso, porque o `FrameTiming` mede o `build` de cada quadro, não o intervalo perdido enquanto a thread está ocupada. Use a tabela de conversão.
 - O `troca_tipo` no `leve` (p99 10,13) está acima da linha de base antiga das animações (8,16): o `leve` já tem 504 itens e as 25 abas de mês, e a home inteira é reconstruída a cada troca de tipo.
 
+### Depois do gzip, das reconstruções e do isolate (2026-11-27)
+
+Mesma bateria, 3 rodadas, mediana (ms). O `fromMap` e o decode deixaram a thread principal; as trocas de mês e de tipo não mudaram, porque o custo delas não vem do volume.
+
+| Volume | Fluxo | p99 build | Pior build | Resultado |
+|---|---|---|---|---|
+| leve | troca_tipo | 11,10 | 20,57 | — |
+| pesado | abrir | 6,15 | 6,16 | ✅ |
+| pesado | troca_mes_perto | 11,63 | 28,46 | já existe |
+| pesado | troca_mes_longe | 11,75 | 34,00 | já existe |
+| pesado | troca_tipo | 11,67 | 14,01 | já existe |
+| pesado | salvar | 5,93 | 7,75 | ✅ |
+| extremo | abrir | 8,27 | 8,27 | ✅ |
+| extremo | troca_tipo | 10,38 | 13,84 | ❌ |
+
+- **O que sobra em `troca_tipo` e `troca_mes_*`** é um quadro de 10 a 15 ms por toque e de 28 a 35 ms quando a lista de abas cresce, igual no `leve`, no `pesado` e no `extremo`. **Boa parte disso é do próprio teste.** O `flutter drive` deixa a semântica ligada (`semanticsEnabled=true` com um handle do teste e o TalkBack desligado no aparelho): na trace, cada quadro gasta uns 2 ms em `SEMANTICS` e 2,4 ms em `FINALIZE TREE`, e um quadro de troca de mês teve 10 ms em `SEMANTICS`, 6,5 ms deles numa coleta de lixo. O trabalho do app no quadro de um toque em GASTOS foi só ~1 ms de `BUILD`, 0,7 de `LAYOUT` e 0,3 de `PAINT`. Por isso os números de `troca_tipo` e `troca_mes_*` servem para comparar antes e depois no mesmo dia, não como valor absoluto: no uso real, sem semântica, ficam abaixo do que a tabela mostra. Tirar o `shrinkWrap` da lista não mudou nada (uma rodada, `leve` e `pesado`).
+- **Como investigar um quadro lento:** num teste de integração, ligue `debugProfileBuildsEnabled = true` (funciona em profile) e rode a ação em `binding.traceAction(..., reportKey: 'trace')` com o `test_driver/integration_test.dart`. O JSON em `build/integration_response_data.json` traz os eventos `B`/`E` de cada widget; ache o `Animator::BeginFrame` mais longo e some os eventos que cabem dentro dele.
+
+Comparação das animações no mesmo dia, mediana de 3 rodadas do `animacoes_perf_test.dart` (p99 de build): antes das mudanças de desempenho, 6,81 / 8,06 / 5,95 ms; depois, 6,07 / 6,23 / 4,82 ms (troca de mês, GANHOS/GASTOS e modal). Nenhuma piorou. A linha de base de manhã (4,75 / 8,16 / 5,24) foi medida em outro estado do aparelho: compare sempre rodadas do mesmo dia.
+
 ## CI
 
 `.github/workflows/ci.yml` roda em cada pull request e em push na `main`, com Flutter 3.50.1: `flutter pub get`, checagem do `dart format`, `flutter analyze` e `flutter test`.
