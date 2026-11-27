@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -84,5 +85,29 @@ void main() {
       find.byType(AnnotatedRegion<SystemUiOverlayStyle>).first,
     );
     expect(region.value, onBrandOverlay);
+  });
+
+  testWidgets('o texto do botão não é cortado com fonte em 130%', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.defaultTheme,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: const TextScaler.linear(1.3)),
+          child: child!,
+        ),
+        home: const LoginScreen(),
+      ),
+    );
+    final paragraph = tester.renderObject<RenderParagraph>(
+      find.text('ENTRAR / CADASTRAR'),
+    );
+    expect(paragraph.didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
   });
 }

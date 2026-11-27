@@ -59,13 +59,16 @@ class AppButton extends StatelessWidget {
                     Icon(icon, color: foreground),
                     const SizedBox(width: AppSpacing.md),
                   ],
+                  // Encolhe o texto em vez de cortar quando a fonte é grande.
                   Flexible(
-                    child: Text(
-                      text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelLarge!
-                          .copyWith(color: foreground),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        text,
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.labelLarge!
+                            .copyWith(color: foreground),
+                      ),
                     ),
                   ),
                 ],
