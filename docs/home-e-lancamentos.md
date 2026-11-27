@@ -68,9 +68,14 @@ A cor muda com a aba de tipo: verde-água para ganhos e coral para gastos.
 | Nome | Obrigatório, até 30 caracteres |
 | Valor | Obrigatório, com máscara de R$ (`currency_text_input_formatter`). Em parcelado, o rótulo é **"Valor total"** e o campo começa com o `totalValue` |
 | Realizado | Chave liga/desliga |
-| Parcela(s) | De 1 a 30 |
+| Parcelas | De 1 a 30. O rótulo fica à esquerda e o "− número +" à direita; os botões têm rótulo acessível |
 
-- O botão "Salvar" fica em carregando e não responde a toques repetidos até a resposta chegar.
+- **Título:** "Novo ganho/gasto" ou "Editar ganho/gasto".
+- **Um estilo só para os valores digitados:** Nome, Valor e o número de Parcelas usam `formValueStyle` (18 sp, regular, texto principal). O rótulo dos campos de texto fica sempre acima e o texto à esquerda.
+- **Contador:** "n/30" só aparece nos 5 últimos caracteres antes do limite.
+- **Excluir pela edição:** o botão "Excluir" (só na edição) abre o mesmo diálogo do arraste e chama `onDelete(onlyInstallment)`. Se falhar, o modal fica aberto e mostra "Não foi possível excluir".
+- O cursor, o puxador e a seleção seguem a cor do tipo.
+- O botão "Salvar" fica sem ícone, em carregando, e não responde a toques repetidos até a resposta chegar.
 - **Sucesso:** o modal fecha e a lista recarrega.
 - **Erro:** a mensagem aparece **dentro do modal**, acima do botão. Uma SnackBar ficaria escondida atrás dele. A mensagem é a da API (`ApiException`) ou "Não foi possível salvar".
 - **Valores:** `AppFormats.stringMoneyToDouble` converte "R$ 1.234,56" em `1234.56`.

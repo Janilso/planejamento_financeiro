@@ -1,8 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
-import 'package:planejamento_financeiro/theme/texts_style.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/load/load.dart';
 
+// Botão principal: fundo branco com texto na cor de ganhos, ou fundo colorido
+// com texto branco. O ícone, quando há, vem antes do texto.
 class AppButton extends StatelessWidget {
   final String text;
   final GestureTapCallback? onPressed;
@@ -30,57 +32,45 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isLight = backgroundColor == null;
+    final bool isLight = backgroundColor == null;
+    final Color foreground = isLight ? AppColors.primary : AppColors.white;
 
     return SizedBox(
       height: 50,
       width: width ?? double.infinity,
-      child: ElevatedButton.icon(
-        icon: (icon != null && !loading)
-            ? Padding(
-                padding: const EdgeInsets.only(right: 24),
-                child: Icon(
-                  icon,
-                  color: isLight ? AppColors.primary : AppColors.white,
-                ),
-              )
-            : null,
-        iconAlignment: IconAlignment.end,
+      child: ElevatedButton(
         onPressed: _getOnPressed(),
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
           elevation: 0,
           backgroundColor: isLight ? AppColors.white : backgroundColor,
           disabledBackgroundColor: isLight
               ? AppColors.white.withAlpha(200)
               : HSLColor.fromColor(backgroundColor!)
-                    .withLightness((0.85).clamp(0.0, 1.0))
+                    .withLightness(0.85)
                     .toColor(),
         ),
-        label: _buildText(
-          color: isLight ? AppColors.primary : AppColors.white,
-          isLight: isLight,
-        ),
+        child: loading
+            ? SizedBox(width: 50, child: AppLoad(color: foreground))
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: foreground),
+                    const SizedBox(width: AppSpacing.md),
+                  ],
+                  Flexible(
+                    child: Text(
+                      text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge!
+                          .copyWith(color: foreground),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
-  }
-
-  Widget _buildText({Color color = AppColors.white, isLight}) {
-    if (loading) {
-      return _buildLoading(color: isLight ? AppColors.primary : color);
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        if (icon != null) SizedBox(width: 48),
-        Text(text, style: AppTextsStyle.bodyLarge(color: color)),
-      ],
-    );
-  }
-
-  Widget _buildLoading({Color? color}) {
-    return SizedBox(width: 50, child: AppLoad(color: color!));
   }
 }

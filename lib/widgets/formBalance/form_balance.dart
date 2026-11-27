@@ -3,12 +3,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:planejamento_financeiro/commons/formats.dart';
-import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/repository/balance.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/balance/enum.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
+import 'package:planejamento_financeiro/widgets/delete_dialog.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/balance_fields.dart';
 import 'package:planejamento_financeiro/widgets/formField/enum.dart';
 import 'package:planejamento_financeiro/widgets/formField/form_field.dart';
@@ -17,12 +18,15 @@ class FormBalance extends StatefulWidget {
   final String typeBalance;
   final BalanceModel? balanceEdit;
   final Future<void> Function(BalanceModel)? onSubmit;
+  // Exclui o lançamento em edição: true só a parcela, false o lançamento.
+  final Future<void> Function(bool onlyInstallment)? onDelete;
 
   const FormBalance({
     super.key,
     this.typeBalance = TypeBalance.gains,
     this.balanceEdit,
     this.onSubmit,
+    this.onDelete,
   });
 
   @override
@@ -108,8 +112,51 @@ class _FormBalanceState extends State<FormBalance> {
     }
   }
 
+  // Excluir pela edição: o mesmo diálogo do arraste. O erro fica no modal.
+  Future<void> _onDelete() async {
+    final onlyInstallment = await confirmDeleteBalance(
+      context,
+      widget.balanceEdit!,
+    );
+    if (onlyInstallment == null || !mounted) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.onDelete!(onlyInstallment);
+      if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Não foi possível excluir');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isGain = widget.typeBalance == TypeBalance.gains;
+    final Color tone = isGain ? AppColors.primary : AppColors.secondary;
+    final textTheme = Theme.of(context).textTheme;
+    // Cursor, puxador e seleção na cor do tipo.
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: tone,
+          selectionHandleColor: tone,
+          selectionColor: tone.withAlpha(60),
+        ),
+      ),
+      child: _buildForm(context, isGain, tone, textTheme),
+    );
+  }
+
+  Widget _buildForm(
+    BuildContext context,
+    bool isGain,
+    Color tone,
+    TextTheme textTheme,
+  ) {
     return FormBuilder(
       key: _formKey,
       autovalidateMode: _autovalidate,
@@ -119,6 +166,16 @@ class _FormBalanceState extends State<FormBalance> {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.base),
+            child: Text(
+              '${widget.balanceEdit == null ? 'Novo' : 'Editar'} '
+              '${isGain ? 'ganho' : 'gasto'}',
+              style: textTheme.titleSmall!.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           AppFormField(
             name: BalanceFields.name,
             label: 'Nome',
@@ -141,6 +198,7 @@ class _FormBalanceState extends State<FormBalance> {
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(),
             ]),
+            hintText: 'R\$ 0,00',
             inputFormatters: [formatterMoney],
           ),
           AppFormField(
@@ -151,33 +209,38 @@ class _FormBalanceState extends State<FormBalance> {
           ),
           AppFormField(
             name: BalanceFields.totalInstallment,
-            label: 'Parcela(s)',
+            label: 'Parcelas',
             typeBalance: widget.typeBalance,
             type: TypeInput.spin,
             minLength: 1,
             maxLength: 30,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: AppSpacing.lg),
           if (_error != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium!
-                    .copyWith(color: AppColors.secondary),
+                style: textTheme.bodyMedium!.copyWith(color: AppColors.danger),
               ),
             ),
           AppButton(
             text: "Salvar",
             loading: _saving,
-            icon: AppIcons.send,
-            backgroundColor: widget.typeBalance == TypeBalance.gains
-                ? AppColors.primary
-                : AppColors.secondary,
+            backgroundColor: tone,
             onPressed: _onSubmit,
           ),
-          const SizedBox(height: 18),
+          if (widget.balanceEdit != null && widget.onDelete != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: TextButton(
+                style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                onPressed: _saving ? null : _onDelete,
+                child: const Text('Excluir'),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.base),
         ],
       ),
     );

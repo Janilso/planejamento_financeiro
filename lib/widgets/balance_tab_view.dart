@@ -217,6 +217,12 @@ class _BalanceTabViewState extends State<BalanceTabView>
                             onSubmit: widget.onEdit == null
                                 ? null
                                 : (edited) => widget.onEdit!(balance, edited),
+                            onDelete: widget.onDelete == null
+                                ? null
+                                : (only) => widget.onDelete!(
+                                    balance,
+                                    onlyInstallment: only,
+                                  ),
                           ),
                         ),
                         name: balance.name,
