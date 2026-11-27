@@ -47,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<MonthBalanceModel> _balances;
   // A última busca falhou: o botão + fica desativado até carregar de novo.
   bool _loadFailed = false;
+  // O último resultado carregado: páginas novas (troca de mês, lista que
+  // cresce) nascem com ele e não piscam o loader enquanto o Future resolve.
+  MonthBalanceModel? _lastBalances;
 
   @override
   void initState() {
@@ -65,8 +68,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<MonthBalanceModel> _loadBalances() {
     final future = _balanceRepository.getBalances();
     future.then(
-      (_) {
-        if (mounted && _loadFailed) setState(() => _loadFailed = false);
+      (data) {
+        // Reconstruir aqui é o que leva o resultado às páginas que o
+        // TabBarView ainda não montou: elas guardam o initialData do build.
+        if (!mounted) return;
+        setState(() {
+          _lastBalances = data;
+          _loadFailed = false;
+        });
       },
       onError: (_) {
         if (mounted && !_loadFailed) setState(() => _loadFailed = true);
@@ -250,6 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               buildTabView: (context, index) => FutureBuilder(
                 future: _balances,
+                initialData: _lastBalances,
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Padding(

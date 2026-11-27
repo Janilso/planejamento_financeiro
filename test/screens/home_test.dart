@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
+import 'package:planejamento_financeiro/widgets/balance_resume.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
+import 'package:planejamento_financeiro/widgets/load/load.dart';
 
 import '../fakes.dart';
 import '../helpers.dart';
@@ -16,6 +18,7 @@ void main() {
     WidgetTester tester,
     FakeBalanceRepository repo, {
     Future<void> Function()? onLogout,
+    int quadros = 2,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -33,8 +36,9 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    for (var i = 0; i < quadros; i++) {
+      await tester.pump();
+    }
   }
 
   testWidgets('busca uma vez e cada aba mostra o próprio mês', (tester) async {
@@ -385,6 +389,108 @@ void main() {
       await save(tester);
 
       expect(repo.calls, ['update abc {name: Televisão}']);
+    });
+  });
+
+  group('páginas de mês sem piscar o loader', () {
+    FakeBalanceRepository repoComMeses() => FakeBalanceRepository(
+      data: {
+        'NOV/26': {
+          'gains': [balanceJson('Salário', 1500, 'gains')],
+          'expenses': [],
+        },
+        'DEZ/26': {
+          'gains': [
+            balanceJson('Bônus', 700, 'gains', date: '2026-12-15T12:00:00.000'),
+          ],
+          'expenses': [],
+        },
+        'JAN/27': {
+          'gains': [
+            balanceJson(
+              'Freela',
+              300,
+              'gains',
+              date: '2027-01-15T12:00:00.000',
+            ),
+          ],
+          'expenses': [],
+        },
+      },
+    );
+
+    // Avança quadro a quadro: o loader de um quadro só aparece assim.
+    Future<void> semLoaderPor(WidgetTester tester, int quadros) async {
+      for (var i = 0; i < quadros; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(
+          find.byType(AppLoad),
+          findsNothing,
+          reason: 'AppLoad no quadro $i',
+        );
+      }
+    }
+
+    testWidgets('trocar de mês, pelo toque e pelo deslize', (tester) async {
+      await pumpHome(tester, repoComMeses());
+
+      await tester.tap(find.text('DEZ/26'));
+      await semLoaderPor(tester, 45);
+
+      await tester.flingFrom(
+        tester.getCenter(find.byType(BalanceResume).last),
+        const Offset(300, 0),
+        1500,
+      );
+      await semLoaderPor(tester, 60);
+    });
+
+    testWidgets('a lista de meses crescendo', (tester) async {
+      await pumpHome(tester, repoComMeses());
+      // A nona aba (FEV/26) fica a 4 abas do começo e faz a lista passar de
+      // 25 para 37 meses; ao fim da animação o controlador é recriado.
+      for (final mes in [
+        'OUT/26',
+        'SET/26',
+        'AGO/26',
+        'JUL/26',
+        'JUN/26',
+        'MAI/26',
+        'ABR/26',
+        'MAR/26',
+        'FEV/26',
+      ]) {
+        await tester.tap(find.text(mes).first);
+        await semLoaderPor(tester, 45);
+      }
+      expect(find.text('JAN/26'), findsWidgets);
+    });
+
+    testWidgets('o primeiro carregamento ainda mostra o loader', (
+      tester,
+    ) async {
+      await pumpHome(tester, repoComMeses(), quadros: 0);
+      expect(find.byType(AppLoad), findsOneWidget);
+
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(AppLoad), findsNothing);
+      expect(find.text('Salário'), findsOneWidget);
+    });
+
+    testWidgets('recarga que falha depois de carregar mostra o erro', (
+      tester,
+    ) async {
+      final repo = repoComMeses();
+      await pumpHome(tester, repo);
+
+      repo.error = Exception('sem rede');
+      await openFormAndSave(tester);
+
+      expect(
+        find.text('Não foi possível carregar os lançamentos'),
+        findsOneWidget,
+      );
     });
   });
 }

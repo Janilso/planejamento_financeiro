@@ -35,6 +35,7 @@ A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F76
 
 - A home busca **uma vez** (`GET /balances` devolve todos os meses) e guarda um `Future<MonthBalanceModel>`. Cada aba só lê o próprio mês do resultado.
 - Depois de criar, editar ou excluir, `_reloadBalances` busca de novo.
+- **Sem piscar o loader:** a home guarda o último resultado (`_lastBalances`) e o passa como `initialData` ao `FutureBuilder` de cada página. Páginas que nascem depois (troca de mês, ou a lista de meses que cresce) já mostram a lista; só o primeiro carregamento mostra o `AppLoad`. Ao chegar o resultado, a home se reconstrói (`setState`), porque o `InfiniteTabView` cria os `FutureBuilder` de todos os meses no `build` e o `TabBarView` só os monta depois, guardando o `initialData` daquele momento.
 - **Erro na busca:** um cartão branco com ícone, "Não foi possível carregar os lançamentos" e o botão "Tentar de novo", em vez de carregar para sempre. O botão + fica desativado até a busca dar certo.
 - **Avisos de sucesso:** uma SnackBar com "Lançamento salvo" (criar ou editar) ou "Lançamento excluído" (pela lista ou pela edição). Excluir com falha mantém o item e mostra "Não foi possível excluir".
 - **Fonte do sistema:** o layout funciona até 130%. As abas de mês voltam a mostrar o mês selecionado quando a escala muda com a tela aberta (`TabBar` com `key` da escala).
