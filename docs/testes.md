@@ -72,6 +72,8 @@ Linha de base de 2026-11-27 (Android a 120 Hz, valores em ms; antes das mudança
 | GANHOS/GASTOS | 480 | 1,11 / 2,03 / 9,93 / 18,21 | 2,48 / 3,12 / 4,01 / 8,10 |
 | Modal abrir/fechar | 535 | 1,34 / 2,12 / 5,48 / 11,92 | 2,21 / 2,60 / 2,86 / 17,29 |
 
+Depois das mudanças de animação (mola padrão, páginas sem loader, cor animada e linha de erro reservada), a mesma bateria deu números equivalentes: p99 de build de 4,75 / 8,16 / 5,24 ms e p99 de raster de 2,05 / 3,96 / 3,11 ms nos três fluxos. Uma rodada por fluxo: diferenças de média dessa ordem são ruído.
+
 ## CI
 
 `.github/workflows/ci.yml` roda em cada pull request e em push na `main`, com Flutter 3.50.1: `flutter pub get`, checagem do `dart format`, `flutter analyze` e `flutter test`.
