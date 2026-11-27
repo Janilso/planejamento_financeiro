@@ -140,11 +140,19 @@ void main() {
   }
 
   // Quadros de 16 ms até a condição valer (no máximo 10 s).
-  Future<void> ate(WidgetTester tester, bool Function() pronto) async {
+  Future<void> ate(
+    WidgetTester tester,
+    bool Function() pronto, {
+    String Function()? estado,
+  }) async {
     for (var i = 0; i < 625 && !pronto(); i++) {
       await tester.pump(const Duration(milliseconds: 16));
     }
-    expect(pronto(), isTrue, reason: 'a condição não valeu em 10 s');
+    expect(
+      pronto(),
+      isTrue,
+      reason: 'a condição não valeu em 10 s: ${estado?.call()}',
+    );
   }
 
   Future<void> aguardarResumo(WidgetTester tester) =>
@@ -241,11 +249,11 @@ void main() {
       await aguardarResumo(tester);
       await tester.tap(find.byType(FloatingActionButton));
       await esperar(tester);
-      Finder campo(String nome) => find.byWidgetPredicate(
-        (w) => w is FormBuilderTextField && w.name == nome,
-      );
-      await tester.enterText(campo('name'), 'Perf ${v.name}');
-      await tester.enterText(campo('value'), '5000');
+      // Preenche pelo estado do formulário: o enterText não alcança o teclado
+      // real do celular e os campos ficariam vazios.
+      final form = tester.state<FormBuilderState>(find.byType(FormBuilder));
+      form.fields['name']!.didChange('Perf ${v.name}');
+      form.fields['value']!.didChange('R\$ 50,00');
       await tester.pump(const Duration(milliseconds: 300));
       await binding.watchPerformance(() async {
         await tester.tap(find.text('Salvar'));
@@ -254,6 +262,11 @@ void main() {
           () =>
               h.adaptador.gets == 2 &&
               find.byType(FormBalance).evaluate().isEmpty,
+          estado: () =>
+              'gets=${h.adaptador.gets}, '
+              'formulário=${find.byType(FormBalance).evaluate().length}, '
+              'erro=${find.text('Não foi possível salvar').evaluate().length}, '
+              'salvar=${find.text('Salvar').evaluate().length}, textos=${find.descendant(of: find.byType(FormBalance), matching: find.byType(Text)).evaluate().map((e) => (e.widget as Text).data).toList()}',
         );
         await esperar(tester);
       }, reportKey: '${v.name}_salvar');
