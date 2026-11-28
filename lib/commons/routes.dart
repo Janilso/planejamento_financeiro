@@ -14,3 +14,23 @@ Route<T> fadeRoute<T>(WidgetBuilder builder) => PageRouteBuilder<T>(
   transitionsBuilder: (context, animation, secondaryAnimation, child) =>
       FadeTransition(opacity: animation, child: child),
 );
+
+// O botão do login e o cartão branco da home compartilham este Hero: o botão
+// voa e cresce até virar o cartão.
+const cartaoHeroTag = 'cartao';
+
+// Rota do login para a home depois de um login bem-sucedido. O fade termina
+// cedo (0,4 da rota) e o resto do tempo é o voo do botão até o cartão.
+Route<T> cartaoRoute<T>(WidgetBuilder builder) => PageRouteBuilder<T>(
+  transitionDuration: AppMotion.cartao,
+  reverseTransitionDuration: AppMotion.cartao,
+  pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+  transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+      FadeTransition(
+        opacity: CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0, 0.4),
+        ),
+        child: child,
+      ),
+);

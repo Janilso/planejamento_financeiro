@@ -21,10 +21,21 @@ import 'package:planejamento_financeiro/widgets/balance_tab_view.dart';
 import 'package:planejamento_financeiro/widgets/base_modal.dart';
 import 'package:planejamento_financeiro/widgets/formBalance/form_balance.dart';
 import 'package:planejamento_financeiro/widgets/infiniteTabelView/infinite_tabel_view.dart';
+import 'package:planejamento_financeiro/widgets/entrada_home.dart';
 import 'package:planejamento_financeiro/widgets/load/load.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.repository, this.clock, this.onLogout});
+  const HomeScreen({
+    super.key,
+    this.repository,
+    this.clock,
+    this.onLogout,
+    this.dadosIniciais,
+  });
+
+  // Lançamentos que o login já buscou (a home não busca de novo): o botão do
+  // login vira o cartão e as abas e o resumo descem. Nulo nas outras entradas.
+  final MonthBalanceModel? dadosIniciais;
 
   final BalanceRepository? repository;
   final DateTime Function()? clock;
@@ -53,6 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // A cor do fundo e do botão +: 0 em ganhos, 1 em gastos. Acompanha o dedo e
   // a animação das abas de tipo.
   final ValueNotifier<double> _tipo = ValueNotifier(0);
+  // O Hero do cartão só vale na entrada vinda do login; quando a rota termina
+  // ele é desligado, para o cartão não voar de volta no Sair.
+  late bool _vooDoCartao = widget.dadosIniciais != null;
+  Animation<double>? _rota;
 
   @override
   void initState() {
@@ -63,7 +78,30 @@ class _HomeScreenState extends State<HomeScreen> {
       after: initialNextsPrevsMonths,
     );
     actualIndex = _indexOfMonth(months, dateNow);
-    _balances = _loadBalances();
+    if (widget.dadosIniciais != null) {
+      _lastBalances = widget.dadosIniciais;
+      _balances = Future.value(widget.dadosIniciais);
+    } else {
+      _balances = _loadBalances();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_vooDoCartao || _rota != null) return;
+    _rota = ModalRoute.of(context)?.animation?..addStatusListener(_fimDaRota);
+  }
+
+  // A rota nasce "completa" e só então começa a andar: o fim que vale é o que
+  // vem depois de ela ter começado (forward).
+  bool _viuForward = false;
+
+  void _fimDaRota(AnimationStatus status) {
+    if (status == AnimationStatus.forward) _viuForward = true;
+    if (status != AnimationStatus.completed || !_viuForward) return;
+    _rota?.removeStatusListener(_fimDaRota);
+    if (mounted) setState(() => _vooDoCartao = false);
   }
 
   // O erro é tratado pelo FutureBuilder; ignore() evita que ele conte como
@@ -247,12 +285,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _rota?.removeStatusListener(_fimDaRota);
     _tipo.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    return HeroMode(
+      enabled: _vooDoCartao,
+      child: EntradaHome(
+        animacao: _vooDoCartao ? _rota : null,
+        child: _corpo(context),
+      ),
+    );
+  }
+
+  Widget _corpo(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: onBrandOverlay,
       // A cor segue as abas de tipo. O corpo vai como `child`, para não ser
@@ -341,9 +390,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     return Column(
                       children: [
-                        BalanceResume(
-                          gains: data?.gains ?? [],
-                          expenses: data?.expenses ?? [],
+                        EntradaDescendo(
+                          child: BalanceResume(
+                            gains: data?.gains ?? [],
+                            expenses: data?.expenses ?? [],
+                          ),
                         ),
                         Expanded(
                           child: BalanceTabView(

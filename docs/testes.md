@@ -30,6 +30,7 @@ dart format --output=none --set-exit-if-changed lib test
 | `repository/auth_test.dart` | Login, `Bearer`, renovação, dois 401 simultâneos com um refresh só, sessão expirada |
 | `repository/session_test.dart` | `hasSession` |
 | `repository/balance_test.dart` | Formato da API, `parseBalances`, mensagem de erro do `getBalances`, corpo do `POST`, rota da parcela, 409 |
+| `screens/login_para_home_test.dart` | A transição do login para a home: busca antes de navegar, voo do botão ao cartão, `Hero` desligado ao fim, abas e resumo descendo, erro na busca, login que falha e animações desligadas |
 | `screens/login_test.dart` | Erro no login (acima do botão), cancelamento e botão em 320 dp |
 | `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha), edição (valor total, realizado por parcela, nome), reconstruções da home e recargas fora de ordem |
 | `widget_test.dart` | `AppButton`, inclusive com ícone em 320 dp |
