@@ -31,8 +31,10 @@ DateTime dateForNewBalance(DateTime month, DateTime today) {
   return DateTime(month.year, month.month, min(today.day, lastDay));
 }
 
+// Um só formato: criar um DateFormat por chamada custava ~8x mais a cada
+// reconstrução das abas.
+final _monthKeyFormat = DateFormat('MMM/yy', 'pt_BR');
+
 // Chave do mês igual à da API: "MAI/26".
-String monthKey(DateTime month) => DateFormat(
-  'MMM/yy',
-  'pt_BR',
-).format(month).toUpperCase().replaceAll('.', '');
+String monthKey(DateTime month) =>
+    _monthKeyFormat.format(month).toUpperCase().replaceAll('.', '');

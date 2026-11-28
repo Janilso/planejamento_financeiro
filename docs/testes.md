@@ -26,12 +26,12 @@ dart format --output=none --set-exit-if-changed lib test
 | `commons/formats_test.dart` | Conversão de "R$ 1.234,56" para número |
 | `commons/months_test.dart` | Meses sem repetir nem pular, `dateForNewBalance`, `monthKey` |
 | `models/balance_test.dart` | `isInstallmented` |
-| `network/http_client_test.dart` | Headers, params e `patch` |
+| `network/http_client_test.dart` | Headers, params, `patch`, `responseType` e erro em bytes de volta como JSON |
 | `repository/auth_test.dart` | Login, `Bearer`, renovação, dois 401 simultâneos com um refresh só, sessão expirada |
 | `repository/session_test.dart` | `hasSession` |
-| `repository/balance_test.dart` | Formato da API, corpo do `POST`, rota da parcela, 409 |
+| `repository/balance_test.dart` | Formato da API, `parseBalances`, mensagem de erro do `getBalances`, corpo do `POST`, rota da parcela, 409 |
 | `screens/login_test.dart` | Erro no login (acima do botão), cancelamento e botão em 320 dp |
-| `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha) e edição (valor total, realizado por parcela, nome) |
+| `screens/home_test.dart` | Busca única, erro com "Tentar de novo", salvar, Sair, exclusão (só a parcela, todas, cancelar, falha), edição (valor total, realizado por parcela, nome), reconstruções da home e recargas fora de ordem |
 | `widget_test.dart` | `AppButton`, inclusive com ícone em 320 dp |
 | `theme/tokens_test.dart` | Contrastes, a exceção de 3:1 da marca e as escalas de espaçamento e raio |
 | `theme/theme_test.dart` | Escala de texto, `ColorScheme` e temas de diálogo, campos, SnackBar e modal |
@@ -40,6 +40,8 @@ dart format --output=none --set-exit-if-changed lib test
 | `widgets/balance_tab_view_test.dart` | Mês vazio, espaço para o +, arraste e abas de 48 dp |
 | `widgets/delete_dialog_test.dart` | Opções, textos, cor de perigo e acessibilidade do diálogo de excluir |
 | `widgets/form_balance_test.dart` | Título, estilo único dos valores, contador, Excluir pela edição e acessibilidade |
+| `volumes_test.dart` | Os históricos sintéticos (`test/volumes.dart`): contagem de itens, meses, ids, datas às 15:00Z e determinismo |
+| `tool/perf_resumo_test.dart` | O resumo das medições de desempenho (`tool/perf_resumo.dart`): mediana das rodadas e os vereditos aprovado, reprovado, limite e já existe |
 
 ## Padrões
 
@@ -73,6 +75,98 @@ Linha de base de 2026-11-27 (Android a 120 Hz, valores em ms; antes das mudança
 | Modal abrir/fechar | 535 | 1,34 / 2,12 / 5,48 / 11,92 | 2,21 / 2,60 / 2,86 / 17,29 |
 
 Depois das mudanças de animação (mola padrão, páginas sem loader, cor animada e linha de erro reservada), a mesma bateria deu números equivalentes: p99 de build de 4,75 / 8,16 / 5,24 ms e p99 de raster de 2,05 / 3,96 / 3,11 ms nos três fluxos. Uma rodada por fluxo: diferenças de média dessa ordem são ruído.
+
+## Desempenho com volume (profile)
+
+`integration_test/volume_perf_test.dart` mede a home com histórico grande, no **celular**, em profile. Diferente do teste das animações, os dados passam pelo `BalanceRepository` e pelo `HttpClient` de verdade, sobre um adaptador do Dio que serve o JSON sintético com `content-length` (como a API sem gzip): é o único jeito de incluir a decisão do Dio de decodificar fora da thread principal (acima de 50 KB) e o `fromMap` na thread principal. Não roda no `flutter test` nem no CI.
+
+```sh
+flutter drive --profile --no-dds -d <celular> \
+  --driver=test_driver/perf_driver.dart \
+  --target=integration_test/volume_perf_test.dart \
+  [--dart-define=VOLUMES=leve,pesado,extremo]
+dart run tool/perf_resumo.dart   # tabela com as 3 rodadas mais recentes
+```
+
+Cada rodada grava `build/perf/volume_<carimbo>.json`. Rode 3 vezes e deixe o `tool/perf_resumo.dart` tirar a mediana e aplicar os critérios. O `drive` apaga a sessão do app (como no teste das animações): depois dele, é preciso entrar de novo com a conta Google.
+
+**Volumes** (`test/volumes.dart`, determinísticos; datas às 15:00Z, até o dia 28):
+
+| Volume | Meses | Lançamentos por mês | Itens no `GET` |
+|---|---|---|---|
+| `leve` | 12 | 15 | 504 |
+| `pesado` | 60 (o mês atual com 150) | 20 | 3.724 |
+| `extremo` | 120 | 25 | 8.400 |
+
+Um em cada cinco lançamentos é parcelado em 10x, com as parcelas nos meses seguintes. O teste roda primeiro um aquecimento sem relatório e deixa o `extremo` por último.
+
+**Fluxos e critérios** (mediana de 3 rodadas, no `pesado`):
+
+| Fluxo | O que mede | Critério |
+|---|---|---|
+| `abrir` | os dados chegam com o loader na tela | pior quadro de build e raster < 16 ms |
+| `troca_mes_perto` | 21 arremessos para o passado (25 a 49 abas) | p99 < 8,3 ms e pior quadro < 16 ms |
+| `troca_mes_longe` | mais 39 arremessos (até 85 abas) | igual |
+| `troca_tipo` | 6 toques alternados em GASTOS e GANHOS | p99 < 8,3 ms |
+| `rolar_lista` | 3 arremessos para baixo e 3 para cima na lista de GASTOS | p99 < 8,3 ms |
+| `salvar` | do toque em Salvar até a recarga assentar | pior quadro < 16 ms |
+
+O `tool/perf_resumo.dart` classifica cada fluxo do `pesado`: `reprovado` (falha e fica pelo menos 20% pior que o `leve`), `limite` (falha, mas perto do `leve`), `já existe` (o `leve` também falha) ou `✅`. O `extremo` só usa o critério absoluto. Além dos quadros, o relatório traz `abrir_ms` (do GET liberado até o resumo aparecer) e `conversao` (`decode_ms` e `fromMap_ms`, na thread principal, de cada volume).
+
+### Linha de base com volume (2026-11-27)
+
+Android a 120 Hz, profile, mediana de 3 rodadas, valores em ms (`tool/perf_resumo.dart`):
+
+| Volume | Fluxo | p99 build | p99 raster | Pior build | Pior raster | Resultado |
+|---|---|---|---|---|---|---|
+| leve | abrir | 13,02 | 1,20 | 13,02 | 1,20 | — |
+| leve | troca_mes_perto | 14,18 | 4,45 | 33,95 | 6,34 | — |
+| leve | troca_mes_longe | 9,39 | 3,68 | 27,63 | 12,83 | — |
+| leve | troca_tipo | 10,13 | 3,55 | 12,19 | 4,85 | — |
+| leve | rolar_lista | 3,31 | 4,41 | 3,77 | 8,37 | — |
+| leve | salvar | 6,65 | 4,12 | 7,76 | 4,25 | — |
+| pesado | abrir | 4,78 | 3,23 | 6,70 | 3,24 | ✅ |
+| pesado | troca_mes_perto | 11,83 | 3,84 | 30,40 | 4,88 | já existe |
+| pesado | troca_mes_longe | 12,61 | 4,02 | 34,88 | 5,03 | já existe |
+| pesado | troca_tipo | 10,07 | 3,98 | 15,14 | 4,63 | já existe |
+| pesado | rolar_lista | 3,57 | 3,77 | 12,31 | 12,00 | ✅ |
+| pesado | salvar | 5,16 | 3,88 | 8,20 | 3,92 | ✅ |
+| extremo | abrir | 1,16 | 2,86 | 7,72 | 3,04 | ✅ |
+| extremo | troca_mes_perto | 14,60 | 4,00 | 33,30 | 4,90 | ❌ |
+| extremo | troca_mes_longe | 12,97 | 3,97 | 35,61 | 5,08 | ❌ |
+| extremo | troca_tipo | 10,14 | 3,86 | 12,14 | 4,13 | ❌ |
+| extremo | rolar_lista | 3,58 | 4,13 | 8,43 | 11,28 | ✅ |
+| extremo | salvar | 6,45 | 3,38 | 11,36 | 3,66 | ✅ |
+
+| Volume | `abrir_ms` (GET liberado até o resumo) | Decodificar o JSON | `fromMap` (thread principal) |
+|---|---|---|---|
+| leve | 23 | 1,39 | 1,82 |
+| pesado | 49 | 9,39 | 10,05 |
+| extremo | 95 | 21,27 | 22,32 |
+
+- **Os problemas de troca de mês e de tipo não dependem do volume:** o `leve` (poucos itens) tem os mesmos números do `pesado` e do `extremo`. Os piores quadros de 30 a 35 ms na troca de mês coincidem com a lista de abas crescendo (a cada 12 meses, a home inteira é reconstruída e o `TabController` é recriado).
+- **O `fromMap` bloqueia a thread principal por 10 ms no `pesado` e 22 ms no `extremo`.** Os quadros de `abrir` e `salvar` não mostram isso, porque o `FrameTiming` mede o `build` de cada quadro, não o intervalo perdido enquanto a thread está ocupada. Use a tabela de conversão.
+- O `troca_tipo` no `leve` (p99 10,13) está acima da linha de base antiga das animações (8,16): o `leve` já tem 504 itens e as 25 abas de mês, e a home inteira é reconstruída a cada troca de tipo.
+
+### Depois do gzip, das reconstruções e do isolate (2026-11-27)
+
+Mesma bateria, 3 rodadas, mediana (ms). O `fromMap` e o decode deixaram a thread principal; as trocas de mês e de tipo não mudaram, porque o custo delas não vem do volume.
+
+| Volume | Fluxo | p99 build | Pior build | Resultado |
+|---|---|---|---|---|
+| leve | troca_tipo | 11,10 | 20,57 | — |
+| pesado | abrir | 6,15 | 6,16 | ✅ |
+| pesado | troca_mes_perto | 11,63 | 28,46 | já existe |
+| pesado | troca_mes_longe | 11,75 | 34,00 | já existe |
+| pesado | troca_tipo | 11,67 | 14,01 | já existe |
+| pesado | salvar | 5,93 | 7,75 | ✅ |
+| extremo | abrir | 8,27 | 8,27 | ✅ |
+| extremo | troca_tipo | 10,38 | 13,84 | ❌ |
+
+- **O que sobra em `troca_tipo` e `troca_mes_*`** é um quadro de 10 a 15 ms por toque e de 28 a 35 ms quando a lista de abas cresce, igual no `leve`, no `pesado` e no `extremo`. **Boa parte disso é do próprio teste.** O `flutter drive` deixa a semântica ligada (`semanticsEnabled=true` com um handle do teste e o TalkBack desligado no aparelho): na trace, cada quadro gasta uns 2 ms em `SEMANTICS` e 2,4 ms em `FINALIZE TREE`, e um quadro de troca de mês teve 10 ms em `SEMANTICS`, 6,5 ms deles numa coleta de lixo. O trabalho do app no quadro de um toque em GASTOS foi só ~1 ms de `BUILD`, 0,7 de `LAYOUT` e 0,3 de `PAINT`. Por isso os números de `troca_tipo` e `troca_mes_*` servem para comparar antes e depois no mesmo dia, não como valor absoluto: no uso real, sem semântica, ficam abaixo do que a tabela mostra. Tirar o `shrinkWrap` da lista não mudou nada (uma rodada, `leve` e `pesado`).
+- **Como investigar um quadro lento:** num teste de integração, ligue `debugProfileBuildsEnabled = true` (funciona em profile) e rode a ação em `binding.traceAction(..., reportKey: 'trace')` com o `test_driver/integration_test.dart`. O JSON em `build/integration_response_data.json` traz os eventos `B`/`E` de cada widget; ache o `Animator::BeginFrame` mais longo e some os eventos que cabem dentro dele.
+
+Comparação das animações no mesmo dia, mediana de 3 rodadas do `animacoes_perf_test.dart` (p99 de build): antes das mudanças de desempenho, 6,81 / 8,06 / 5,95 ms; depois, 6,07 / 6,23 / 4,82 ms (troca de mês, GANHOS/GASTOS e modal). Nenhuma piorou. A linha de base de manhã (4,75 / 8,16 / 5,24) foi medida em outro estado do aparelho: compare sempre rodadas do mesmo dia.
 
 ## CI
 

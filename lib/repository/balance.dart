@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:isolate';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart' show ResponseType;
 import 'package:planejamento_financeiro/models/balance.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/network/http_client.dart';
@@ -13,17 +18,31 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+// Funções de nível superior de propósito: uma closure criada dentro de um
+// método do repositório pode levar o `this` junto (e com ele o Dio), que não
+// atravessa o isolate.
+MonthBalanceModel parseBalances(Uint8List bytes) => MonthBalanceModel.fromMap(
+  Map<String, dynamic>.from(jsonDecode(utf8.decode(bytes)) as Map),
+);
+
+Future<MonthBalanceModel> parseBalancesInBackground(Uint8List bytes) =>
+    Isolate.run(() => parseBalances(bytes));
+
 class BalanceRepository {
   BalanceRepository(this._client);
 
   final HttpClient _client;
 
+  // Pede o corpo cru e converte (UTF-8, JSON e models) num isolate: com anos de
+  // histórico, o `fromMap` passa de 10 ms e travaria a thread principal.
   Future<MonthBalanceModel> getBalances() async {
     final response = await _call(
-      () => _client.get(ClientRequest(url: '/balances')),
+      () => _client.get(
+        ClientRequest(url: '/balances', responseType: ResponseType.bytes),
+      ),
     );
-    return MonthBalanceModel.fromMap(
-      Map<String, dynamic>.from(response.data as Map),
+    return parseBalancesInBackground(
+      Uint8List.fromList(response.data as List<int>),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -15,12 +16,21 @@ class FakeBalanceRepository implements BalanceRepository {
   Object? error;
   Object? saveError;
   int getCalls = 0;
+  // Com segurarBuscas, cada getBalances() fica pendente até o teste completar
+  // o Completer correspondente: simula respostas que chegam fora de ordem.
+  bool segurarBuscas = false;
+  final List<Completer<MonthBalanceModel>> buscasPendentes = [];
   int createCalls = 0;
   double? lastCreatedValue;
 
   @override
   Future<MonthBalanceModel> getBalances() async {
     getCalls++;
+    if (segurarBuscas) {
+      final pendente = Completer<MonthBalanceModel>();
+      buscasPendentes.add(pendente);
+      return pendente.future;
+    }
     if (error != null) throw error!;
     return MonthBalanceModel.fromMap(data ?? {});
   }

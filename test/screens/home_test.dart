@@ -2,6 +2,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/widgets/balance_resume.dart';
@@ -704,6 +705,188 @@ void main() {
         await tester.pumpAndSettle();
         expect(abaAtiva(tester), 1, reason: 'a aba mudou em $mes');
       }
+    });
+  });
+
+  group('home sem reconstruções à toa', () {
+    FakeBalanceRepository repoDeMeses() => FakeBalanceRepository(
+      data: {
+        'NOV/26': {
+          'gains': [balanceJson('Salário', 1500, 'gains')],
+          'expenses': [balanceJson('Mercado', 200, 'expenses')],
+        },
+        'DEZ/26': {
+          'gains': [
+            balanceJson('Bônus', 700, 'gains', date: '2026-12-15T12:00:00.000'),
+          ],
+          'expenses': [],
+        },
+        'FEV/26': {
+          'gains': [
+            balanceJson(
+              'Fevereiro',
+              100,
+              'gains',
+              date: '2026-02-15T12:00:00.000',
+            ),
+          ],
+          'expenses': [],
+        },
+      },
+    );
+
+    // Quantas vezes o State da HomeScreen reconstruiu durante a ação.
+    Future<int> reconstrucoesDaHome(
+      WidgetTester tester,
+      Future<void> Function() acao,
+    ) async {
+      var contagem = 0;
+      debugOnRebuildDirtyWidget = (element, builtOnce) {
+        if (element.widget is HomeScreen) contagem++;
+      };
+      try {
+        await acao();
+      } finally {
+        debugOnRebuildDirtyWidget = null;
+      }
+      return contagem;
+    }
+
+    testWidgets('o + abre Novo gasto depois de passar para GASTOS', (
+      tester,
+    ) async {
+      await pumpHome(tester, repoDeMeses());
+
+      await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Novo gasto'), findsOneWidget);
+    });
+
+    testWidgets('recarga logo depois de a lista crescer mostra o mês certo '
+        'sem loader', (tester) async {
+      await pumpHome(tester, repoDeMeses());
+      for (final mes in [
+        'OUT/26',
+        'SET/26',
+        'AGO/26',
+        'JUL/26',
+        'JUN/26',
+        'MAI/26',
+        'ABR/26',
+        'MAR/26',
+        'FEV/26',
+      ]) {
+        await tester.tap(find.text(mes).first);
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Fevereiro'), findsOneWidget);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      Finder campo(String nome) => find.byWidgetPredicate(
+        (w) => w is FormBuilderTextField && w.name == nome,
+      );
+      await tester.enterText(campo('name'), 'Mercado');
+      await tester.enterText(campo('value'), '5000');
+      await tester.tap(find.text('Salvar'));
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(
+          find.byType(AppLoad),
+          findsNothing,
+          reason: 'AppLoad no quadro $i',
+        );
+      }
+      expect(find.text('Fevereiro'), findsOneWidget);
+    });
+
+    testWidgets('trocar para um mês vizinho não reconstrói a home', (
+      tester,
+    ) async {
+      await pumpHome(tester, repoDeMeses());
+
+      final vezes = await reconstrucoesDaHome(tester, () async {
+        await tester.tap(find.text('DEZ/26'));
+        await tester.pumpAndSettle();
+      });
+
+      expect(find.text('Bônus'), findsOneWidget);
+      expect(vezes, 0);
+    });
+
+    testWidgets('trocar GANHOS/GASTOS não reconstrói a home', (tester) async {
+      await pumpHome(tester, repoDeMeses());
+
+      final vezes = await reconstrucoesDaHome(tester, () async {
+        await tester.tap(find.widgetWithText(Tab, 'GASTOS'));
+        await tester.pumpAndSettle();
+      });
+
+      expect(find.text('Mercado'), findsOneWidget);
+      expect(vezes, 0);
+    });
+  });
+
+  group('recargas fora de ordem', () {
+    MonthBalanceModel dezembro(String nome) => MonthBalanceModel.fromMap({
+      'DEZ/26': {
+        'gains': [
+          balanceJson(nome, 700, 'gains', date: '2026-12-15T12:00:00.000'),
+        ],
+        'expenses': [],
+      },
+    });
+
+    // Duas buscas pendentes, na ordem em que o usuário salvou.
+    Future<FakeBalanceRepository> comDuasRecargas(WidgetTester tester) async {
+      final repo = FakeBalanceRepository(data: {});
+      await pumpHome(tester, repo);
+      repo.segurarBuscas = true;
+      await openFormAndSave(tester);
+      await openFormAndSave(tester);
+      expect(repo.buscasPendentes, hasLength(2));
+      return repo;
+    }
+
+    testWidgets('recarga antiga que falha depois da nova não desativa o +', (
+      tester,
+    ) async {
+      final repo = await comDuasRecargas(tester);
+
+      repo.buscasPendentes[1].complete(dezembro('Novo'));
+      await tester.pump();
+      repo.buscasPendentes[0].completeError(Exception('sem rede'));
+      await tester.pump();
+
+      final botao = tester.widget<FloatingActionButton>(
+        find.byType(FloatingActionButton),
+      );
+      expect(botao.onPressed, isNotNull);
+      expect(
+        find.text('Não foi possível carregar os lançamentos'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('recarga antiga que chega depois não vira o último resultado', (
+      tester,
+    ) async {
+      final repo = await comDuasRecargas(tester);
+
+      repo.buscasPendentes[1].complete(dezembro('Novo'));
+      await tester.pump();
+      repo.buscasPendentes[0].complete(dezembro('Velho'));
+      await tester.pump();
+
+      await tester.tap(find.text('DEZ/26'));
+      for (var i = 0; i < 45; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(find.text('Velho'), findsNothing, reason: 'Velho no quadro $i');
+      }
+      expect(find.text('Novo'), findsOneWidget);
     });
   });
 }
