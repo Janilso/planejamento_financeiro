@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/models/month_balance.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
+import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/balance_resume.dart';
 import 'package:planejamento_financeiro/widgets/balance_tab_view.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
@@ -197,6 +198,25 @@ void main() {
     await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     handle.dispose();
+  });
+
+  testWidgets('os pontos do menu terminam na borda direita do conteúdo', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+
+    final icone = tester.getRect(find.byIcon(Icons.more_vert));
+
+    // Os três pontos do ⋮ têm 2 dp de raio e ficam no meio do ícone de 24 dp,
+    // com uns 10 dp de vazio de cada lado: a borda dos pontos é o centro + 2.
+    expect(icone.center.dx + 2, closeTo(392 - AppSpacing.base, 0.5));
+
+    await tester.tap(find.byTooltip('Mais opções'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sair'), findsOneWidget);
   });
 
   testWidgets('fonte em 130% não estoura e mantém NOV/26 visível', (
