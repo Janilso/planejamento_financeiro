@@ -7,6 +7,8 @@ import 'package:planejamento_financeiro/commons/icons.dart';
 import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
+import 'package:planejamento_financeiro/models/month_balance.dart';
+import 'package:planejamento_financeiro/repository/balance.dart';
 import 'package:planejamento_financeiro/screens/home.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/overlay.dart';
@@ -16,7 +18,15 @@ import 'package:planejamento_financeiro/widgets/logo_animado.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.signIn, this.vindoDaSplash = false});
+  const LoginScreen({
+    super.key,
+    this.signIn,
+    this.vindoDaSplash = false,
+    this.repository,
+  });
+
+  // Quem busca os lançamentos antes de abrir a home. O padrão é o do injetor.
+  final BalanceRepository? repository;
 
   // Faz o login e lança erro se não der certo. O padrão é Google + Firebase.
   final Future<void> Function()? signIn;
@@ -31,6 +41,30 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool loading = false;
+  // Entrou: o botão continua carregando enquanto a transição roda.
+  bool _entrou = false;
+
+  // Busca os lançamentos antes de navegar: o cartão da home já chega com os
+  // dados e o botão pode virar o cartão. Se falhar, a home abre em fade e faz a
+  // própria busca (e mostra o erro). Com as animações desligadas, vai direto.
+  Future<void> _abrirHome() async {
+    MonthBalanceModel? dados;
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      try {
+        dados =
+            await (widget.repository ?? appInjector.get<BalanceRepository>())
+                .getBalances();
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    Widget home(BuildContext _) =>
+        HomeScreen(repository: widget.repository, dadosIniciais: dados);
+    _entrou = true;
+    Navigator.pushReplacement(
+      context,
+      dados == null ? fadeRoute(home) : cartaoRoute(home),
+    );
+  }
 
   static Future<void> _googleSignIn() async {
     final GoogleSignInAccount googleUser = await GoogleSignIn.instance
@@ -66,10 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await (widget.signIn ?? _googleSignIn)();
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        fadeRoute((context) => const HomeScreen()),
-      );
+      await _abrirHome();
     } catch (error) {
       if (error is GoogleSignInException &&
           error.code == GoogleSignInExceptionCode.canceled) {
@@ -82,8 +113,30 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted && !_entrou) setState(() => loading = false);
     }
+  }
+
+  // O botão voa até o cartão branco da home (sem animações, fica como está).
+  Widget _comVoo(Widget botao) {
+    if (MediaQuery.disableAnimationsOf(context)) return botao;
+    return Hero(
+      tag: cartaoHeroTag,
+      flightShuttleBuilder: (context, animacao, direcao, de, para) =>
+          AnimatedBuilder(
+            animation: animacao,
+            builder: (context, _) => Material(
+              key: const ValueKey('voo-do-cartao'),
+              color: AppColors.white,
+              borderRadius: BorderRadius.lerp(
+                BorderRadius.circular(25),
+                const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+                animacao.value,
+              ),
+            ),
+          ),
+      child: botao,
+    );
   }
 
   @override
@@ -113,11 +166,13 @@ class _LoginScreenState extends State<LoginScreen> {
             left: AppSpacing.xxl,
             right: AppSpacing.xxl,
           ),
-          child: AppButton(
-            text: 'ENTRAR / CADASTRAR',
-            icon: AppIcons.google,
-            loading: loading,
-            onPressed: _loginWithGoogle,
+          child: _comVoo(
+            AppButton(
+              text: 'ENTRAR / CADASTRAR',
+              icon: AppIcons.google,
+              loading: loading,
+              onPressed: _loginWithGoogle,
+            ),
           ),
         ),
       ),

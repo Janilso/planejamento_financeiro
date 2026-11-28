@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/theme/texts_style.dart';
+import 'package:planejamento_financeiro/widgets/entrada_home.dart';
 
 class InfiniteTabView extends StatefulWidget {
   final int length;
@@ -72,45 +73,47 @@ class InfiniteTabViewState extends State<InfiniteTabView>
           // (a da direita, antes do menu): o mês selecionado fica no centro da
           // tela. O menu fica por cima, no canto direito, e a margem deixa o
           // efeito do toque (círculo de 40 dp) fora do nome do mês.
-          SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.centerRight,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: widget.trailing == null ? 0 : AppSpacing.xl,
-                  ),
-                  child: TabBar(
-                    // Recria ao mudar a escala da fonte, para a aba selecionada
-                    // continuar visível.
-                    key: ValueKey(MediaQuery.textScalerOf(context)),
-                    controller: _tabController,
-                    labelPadding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
+          EntradaDescendo(
+            child: SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: widget.trailing == null ? 0 : AppSpacing.xl,
                     ),
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    unselectedLabelStyle: AppTextsStyle.bodyLarge(
-                      color: AppColors.white,
-                    ),
-                    labelStyle: AppTextsStyle.bodyLarge(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.white,
-                    ),
-                    tabs: List.generate(
-                      widget.length,
-                      (index) => Tab(
-                        text: widget.buildTabBar!(context, index),
-                        height: 48,
+                    child: TabBar(
+                      // Recria ao mudar a escala da fonte, para a aba selecionada
+                      // continuar visível.
+                      key: ValueKey(MediaQuery.textScalerOf(context)),
+                      controller: _tabController,
+                      labelPadding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
                       ),
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      unselectedLabelStyle: AppTextsStyle.bodyLarge(
+                        color: AppColors.white,
+                      ),
+                      labelStyle: AppTextsStyle.bodyLarge(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.white,
+                      ),
+                      tabs: List.generate(
+                        widget.length,
+                        (index) => Tab(
+                          text: widget.buildTabBar!(context, index),
+                          height: 48,
+                        ),
+                      ),
+                      indicatorColor: AppColors.white,
+                      dividerHeight: 0,
                     ),
-                    indicatorColor: AppColors.white,
-                    dividerHeight: 0,
                   ),
-                ),
-                ?widget.trailing,
-              ],
+                  ?widget.trailing,
+                ],
+              ),
             ),
           ),
           Expanded(
