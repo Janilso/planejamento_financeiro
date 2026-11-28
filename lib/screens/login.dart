@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _entrou = true;
     Navigator.pushReplacement(
       context,
-      dados == null ? fadeRoute(home) : cartaoRoute(home),
+      dados == null ? fadeRoute(home) : entradaHomeRoute(home),
     );
   }
 

@@ -11,7 +11,7 @@ flowchart LR
     H -->|sessão expirada| L
 ```
 
-A splash espera 2 segundos e chama `hasSession` (`lib/repository/session.dart`): há sessão quando o Firebase está logado **e** os tokens da API existem no armazenamento.
+A splash espera 2 segundos e chama `hasSession` (`lib/repository/session.dart`): há sessão quando o Firebase está logado **e** os tokens da API existem no armazenamento. Com sessão, a splash busca os lançamentos nesses 2 s e a home abre já com eles, sem loader; se a busca falhar, a home faz a própria. Detalhes da animação em `tema-e-layout.md`.
 
 ## Login (`lib/screens/login.dart`)
 

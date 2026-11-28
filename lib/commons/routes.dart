@@ -19,9 +19,10 @@ Route<T> fadeRoute<T>(WidgetBuilder builder) => PageRouteBuilder<T>(
 // voa e cresce até virar o cartão.
 const cartaoHeroTag = 'cartao';
 
-// Rota do login para a home depois de um login bem-sucedido. O fade termina
-// cedo (0,4 da rota) e o resto do tempo é o voo do botão até o cartão.
-Route<T> cartaoRoute<T>(WidgetBuilder builder) => PageRouteBuilder<T>(
+// Rota para a home com entrada animada: o fade termina cedo (0,4 da rota) e
+// o resto do tempo é a entrada. Depois do login, o botão voa até o cartão;
+// depois da splash, as folhas já saíram e o cartão sobe.
+Route<T> entradaHomeRoute<T>(WidgetBuilder builder) => PageRouteBuilder<T>(
   transitionDuration: AppMotion.cartao,
   reverseTransitionDuration: AppMotion.cartao,
   pageBuilder: (context, animation, secondaryAnimation) => builder(context),
