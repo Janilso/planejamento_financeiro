@@ -23,6 +23,7 @@ dependencies:
   dio: ^5.11.1
   auto_injector: ^2.2.0
   flutter_secure_storage: ^11.2.0
+  flutter_svg: ^2.5.1
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/logo/
 
   fonts:
     - family: WorkSans

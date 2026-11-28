@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/commons/icons.dart';
-import 'package:planejamento_financeiro/commons/images.dart';
 import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/repository/auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
@@ -13,13 +12,18 @@ import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/overlay.dart';
 import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
+import 'package:planejamento_financeiro/widgets/logo_animado.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.signIn});
+  const LoginScreen({super.key, this.signIn, this.vindoDaSplash = false});
 
   // Faz o login e lança erro se não der certo. O padrão é Google + Firebase.
   final Future<void> Function()? signIn;
+
+  // Vindo da splash, o logo chega voando já montado (Hero); depois de Sair ou
+  // da sessão expirar, ele entra em partes. Nos dois casos, as folhas balançam.
+  final bool vindoDaSplash;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -94,7 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Hero(
                 tag: logoHeroTag,
-                child: AppImage.logoWhite(width: 168, height: 117),
+                child: LogoAnimado(
+                  entrada: !widget.vindoDaSplash,
+                  balancar: true,
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
             ],
