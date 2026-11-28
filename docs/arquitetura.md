@@ -34,7 +34,7 @@ lib/
 ├── repository/            balance.dart, auth.dart, token_storage.dart, session.dart, injector.dart
 ├── network/               api_config.dart, http_client.dart, auth_interceptor.dart, session_events.dart
 ├── models/                balance.dart, group_balance.dart, month_balance.dart
-├── commons/               months.dart, formats.dart, icons.dart, images.dart
+├── commons/               months.dart, formats.dart, icons.dart
 ├── theme/                 colors.dart, texts_style.dart, theme.dart
 └── extensions/            string.dart
 tool/celular.sh            instala e opera o app no celular por ADB

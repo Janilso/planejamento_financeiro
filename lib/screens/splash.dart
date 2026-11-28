@@ -45,7 +45,9 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacement(
       context,
       fadeRoute(
-        (context) => loggedIn ? const HomeScreen() : const LoginScreen(),
+        (context) => loggedIn
+            ? const HomeScreen()
+            : const LoginScreen(vindoDaSplash: true),
       ),
     );
   }

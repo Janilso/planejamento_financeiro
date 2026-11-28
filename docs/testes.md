@@ -38,7 +38,7 @@ dart format --output=none --set-exit-if-changed lib test
 | `widgets/balance_test.dart` | Subtítulo, ícone de status, valor e toque do item |
 | `widgets/balance_resume_test.dart` | "Falta receber/pagar", balanço negativo e valores enormes |
 | `widgets/balance_tab_view_test.dart` | Mês vazio, espaço para o +, arraste e abas de 48 dp |
-| `widgets/logo_animado_test.dart` | Logo da splash: tamanho, partes fora do lugar no começo, tudo no lugar em 1,5 s, faixas do texto sem cortar letras e movimento reduzido |
+| `widgets/logo_animado_test.dart` | Logo da splash: tamanho, partes fora do lugar no começo, tudo no lugar em 1,5 s, faixas do texto sem cortar letras, movimento reduzido e o balanço das folhas no login |
 | `widgets/delete_dialog_test.dart` | Opções, textos, cor de perigo e acessibilidade do diálogo de excluir |
 | `widgets/form_balance_test.dart` | Título, estilo único dos valores, contador, Excluir pela edição e acessibilidade |
 | `volumes_test.dart` | Os históricos sintéticos (`test/volumes.dart`): contagem de itens, meses, ids, datas às 15:00Z e determinismo |
@@ -48,7 +48,7 @@ dart format --output=none --set-exit-if-changed lib test
 
 - **TDD:** o teste vem antes e precisa falhar pelo motivo certo.
 - **Dependências injetadas:** a `HomeScreen` recebe `repository`, `clock` (data fixa) e `onLogout`; a `LoginScreen` recebe `signIn`. Os testes usam esses parâmetros em vez de Firebase e rede.
-- **`AppLoad` tem animação infinita:** enquanto ele estiver na tela, use `pump()`. O `pumpAndSettle()` estoura o tempo esperando a animação acabar.
+- **`AppLoad` e o logo do login têm animação infinita:** enquanto um deles estiver na tela, use `pump()`. O `pumpAndSettle()` estoura o tempo esperando a animação acabar.
 - **Localizações:** os testes de widget montam o `MaterialApp` com `GlobalMaterialLocalizations` e `FormBuilderLocalizations`, como o app.
 
 ## Desempenho das animações (profile)

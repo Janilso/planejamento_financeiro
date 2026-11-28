@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -13,20 +15,39 @@ const _alturaSvg = 118.0;
 // linhas do texto sobem de baixo da própria faixa. Termina parado em 1,5 s,
 // antes da troca de tela; com as animações desligadas no sistema, já começa
 // parado.
+//
+// No login, `balancar` deixa as três folhas indo e voltando até 3 dp na
+// horizontal, sem parar, cada uma um pouco atrasada em relação à outra. Sem
+// `entrada`, o logo já começa montado (quando chega voando da splash).
 class LogoAnimado extends StatefulWidget {
-  const LogoAnimado({super.key});
+  const LogoAnimado({super.key, this.entrada = true, this.balancar = false});
+
+  final bool entrada;
+  final bool balancar;
 
   static const duracao = Duration(milliseconds: 1500);
+  static const cicloDoBalanco = Duration(milliseconds: 2000);
+  static const amplitude = 3.0;
 
   @override
   State<LogoAnimado> createState() => _LogoAnimadoState();
 }
 
 class _LogoAnimadoState extends State<LogoAnimado>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: LogoAnimado.duracao,
+  );
+  late final AnimationController _balanco = AnimationController(
+    vsync: this,
+    duration: LogoAnimado.cicloDoBalanco,
+  );
+  // Rampa do balanço: a amplitude cresce de 0 a 1 ao começar, para as folhas
+  // não pularem; parada, deixa as folhas no lugar.
+  late final AnimationController _rampa = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
   );
   bool _iniciado = false;
 
@@ -37,27 +58,54 @@ class _LogoAnimadoState extends State<LogoAnimado>
     _iniciado = true;
     if (MediaQuery.disableAnimationsOf(context)) {
       _controller.value = 1;
-    } else {
-      _controller.forward();
+      return;
     }
+    if (!widget.entrada) {
+      _controller.value = 1;
+      _balancar();
+      return;
+    }
+    _controller.forward().then((_) => _balancar());
+  }
+
+  void _balancar() {
+    if (!widget.balancar || !mounted) return;
+    _balanco.repeat();
+    _rampa.forward();
   }
 
   @override
   void dispose() {
+    _rampa.dispose();
+    _balanco.dispose();
     _controller.dispose();
     super.dispose();
   }
 
-  // Folha entrando de fora da tela, pela esquerda.
-  Widget _folha(String nome, double inicio, double fim) => SlideTransition(
-    position: Tween(begin: const Offset(-2.2, 0), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Interval(inicio, fim, curve: Curves.easeOutCubic),
-      ),
-    ),
-    child: _parte(nome),
-  );
+  // Folha entrando de fora da tela, pela esquerda; depois, no login, balança
+  // com o atraso `fase` (fração do ciclo).
+  Widget _folha(String nome, double inicio, double fim, double fase) =>
+      SlideTransition(
+        position: Tween(begin: const Offset(-2.2, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Interval(inicio, fim, curve: Curves.easeOutCubic),
+          ),
+        ),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([_balanco, _rampa]),
+          builder: (context, child) => Transform.translate(
+            offset: Offset(
+              LogoAnimado.amplitude *
+                  Curves.easeInOut.transform(_rampa.value) *
+                  math.sin(2 * math.pi * (_balanco.value - fase)),
+              0,
+            ),
+            child: child,
+          ),
+          child: _parte(nome),
+        ),
+      );
 
   // Linha do texto subindo de baixo da própria faixa (topo e base em unidades
   // do viewBox): começa escondida, sem aparecer cortada.
@@ -98,9 +146,9 @@ class _LogoAnimadoState extends State<LogoAnimado>
         height: _altura,
         child: Stack(
           children: [
-            _folha('folha-3', 0.0, 0.35),
-            _folha('folha-2', 0.1, 0.45),
-            _folha('folha-1', 0.2, 0.55),
+            _folha('folha-3', 0.0, 0.35, 0.24),
+            _folha('folha-2', 0.1, 0.45, 0.12),
+            _folha('folha-1', 0.2, 0.55, 0.0),
             _texto('texto-1', 84, 101, 0.5),
             _texto('texto-2', 104, 118, 0.62),
           ],

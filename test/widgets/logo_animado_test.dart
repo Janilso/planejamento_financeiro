@@ -5,16 +5,22 @@ import 'package:material_ui/material_ui.dart';
 import 'package:planejamento_financeiro/widgets/logo_animado.dart';
 
 void main() {
-  Future<void> montar(WidgetTester tester, {bool semAnimacao = false}) =>
-      tester.pumpWidget(
-        MediaQuery(
-          data: MediaQueryData(disableAnimations: semAnimacao),
-          child: const Directionality(
-            textDirection: TextDirection.ltr,
-            child: Center(child: LogoAnimado()),
-          ),
+  Future<void> montar(
+    WidgetTester tester, {
+    bool semAnimacao = false,
+    bool entrada = true,
+    bool balancar = false,
+  }) => tester.pumpWidget(
+    MediaQuery(
+      data: MediaQueryData(disableAnimations: semAnimacao),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: LogoAnimado(entrada: entrada, balancar: balancar),
         ),
-      );
+      ),
+    ),
+  );
 
   // A caixa de 168x117 do logo (o LogoAnimado em si ocupa a largura toda).
   Finder caixaFinder() => find
@@ -160,5 +166,59 @@ void main() {
       ),
     );
     expect(folha.center.dx, closeTo(centroDaTela, 0.5));
+  });
+
+  group('balanço das folhas (login)', () {
+    const folhas = ['folha-1', 'folha-2', 'folha-3'];
+
+    // Deslocamento horizontal de cada folha em relação ao lugar final.
+    List<double> desvios(WidgetTester tester) => [
+      for (final f in folhas) parte(tester, f).left - caixa(tester).left,
+    ];
+
+    testWidgets('sem entrada, o logo já começa montado', (tester) async {
+      await montar(tester, entrada: false);
+      for (final nome in [...folhas, 'texto-1', 'texto-2']) {
+        noLugar(parte(tester, nome), caixa(tester), nome);
+      }
+    });
+
+    testWidgets('depois da entrada, as folhas balançam até 3 dp sem parar', (
+      tester,
+    ) async {
+      await montar(tester, balancar: true);
+      await tester.pump(const Duration(milliseconds: 1500));
+
+      var maior = 0.0;
+      for (var i = 0; i < 60; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        for (final d in desvios(tester)) {
+          expect(d.abs(), lessThanOrEqualTo(3.01));
+          if (d.abs() > maior) maior = d.abs();
+        }
+        // O texto não balança.
+        noLugar(parte(tester, 'texto-1'), caixa(tester), 'texto-1');
+      }
+      expect(maior, greaterThan(1.5), reason: 'as folhas não se mexeram');
+      // Continua mexendo depois de 6 s.
+      final antes = desvios(tester);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(desvios(tester), isNot(antes));
+    });
+
+    testWidgets('as folhas não balançam juntas', (tester) async {
+      await montar(tester, entrada: false, balancar: true);
+      await tester.pump(const Duration(milliseconds: 300));
+      final d = desvios(tester);
+      expect(d.toSet(), hasLength(3));
+    });
+
+    testWidgets('com animações desligadas, não balança', (tester) async {
+      await montar(tester, semAnimacao: true, balancar: true);
+      await tester.pump(const Duration(seconds: 3));
+      for (final d in desvios(tester)) {
+        expect(d.abs(), lessThan(0.5));
+      }
+    });
   });
 }

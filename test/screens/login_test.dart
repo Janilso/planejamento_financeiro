@@ -8,6 +8,7 @@ import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:planejamento_financeiro/screens/login.dart';
 import 'package:planejamento_financeiro/theme/overlay.dart';
 import 'package:planejamento_financeiro/widgets/button.dart';
+import 'package:planejamento_financeiro/widgets/logo_animado.dart';
 import 'package:planejamento_financeiro/theme/theme.dart';
 
 void main() {
@@ -40,6 +41,36 @@ void main() {
     );
   });
 
+  testWidgets('vindo da splash, o logo chega montado e as folhas balançam', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.defaultTheme,
+        home: LoginScreen(signIn: () async {}, vindoDaSplash: true),
+      ),
+    );
+
+    final logo = tester.widget<LogoAnimado>(find.byType(LogoAnimado));
+    expect(logo.entrada, isFalse);
+    expect(logo.balancar, isTrue);
+  });
+
+  testWidgets('depois de sair, o logo entra em partes e depois balança', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.defaultTheme,
+        home: LoginScreen(signIn: () async {}),
+      ),
+    );
+
+    final logo = tester.widget<LogoAnimado>(find.byType(LogoAnimado));
+    expect(logo.entrada, isTrue);
+    expect(logo.balancar, isTrue);
+  });
+
   testWidgets('mostra erro quando o login falha', (tester) async {
     await tapLogin(tester, () async => throw Exception('x'));
 
@@ -63,7 +94,8 @@ void main() {
 
   testWidgets('o aviso de erro aparece acima do botão', (tester) async {
     await tapLogin(tester, () async => throw Exception('x'));
-    await tester.pumpAndSettle();
+    // As folhas do logo balançam sem parar: pumpAndSettle nunca assentaria.
+    await tester.pump(const Duration(seconds: 1));
 
     final aviso = tester.getRect(find.byType(SnackBar));
     final botao = tester.getRect(find.byType(AppButton));

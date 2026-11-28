@@ -13,7 +13,7 @@ App Flutter (Android) pessoal e simples para controlar ganhos e gastos mês a m�
 
 - Commits em pt-BR, no padrão `fix:`, `feat:`, `test:`, `docs:`, `ci:`, `chore:`, `style:`.
 - TDD com `flutter_test` e dublês escritos à mão (sem libs de mock).
-- O `AppLoad` tem animação infinita: nos testes de widget, use `pump()` enquanto ele estiver na tela.
+- O `AppLoad` e o logo do login (as folhas balançam) têm animação infinita: nos testes de widget, use `pump()` enquanto um deles estiver na tela.
 - Antes de cada commit, pare e deixe o usuário revisar o código e testar no celular.
 - Atualize o arquivo de `docs/` do assunto junto com a mudança.
 
