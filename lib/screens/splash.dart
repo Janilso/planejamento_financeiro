@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:planejamento_financeiro/commons/images.dart';
 import 'package:planejamento_financeiro/commons/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:planejamento_financeiro/repository/injector.dart';
@@ -15,6 +14,7 @@ import 'package:planejamento_financeiro/theme/colors.dart';
 import 'package:planejamento_financeiro/theme/overlay.dart';
 import 'package:planejamento_financeiro/theme/spacing.dart';
 import 'package:planejamento_financeiro/widgets/load/load.dart';
+import 'package:planejamento_financeiro/widgets/logo_animado.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -60,10 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: ListView(
             shrinkWrap: true,
             children: [
-              Hero(
-                tag: logoHeroTag,
-                child: AppImage.logoWhite(width: 168, height: 117),
-              ),
+              Hero(tag: logoHeroTag, child: const LogoAnimado()),
               const SizedBox(height: AppSpacing.md),
               Container(
                 margin: EdgeInsets.symmetric(
