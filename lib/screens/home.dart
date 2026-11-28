@@ -31,11 +31,16 @@ class HomeScreen extends StatefulWidget {
     this.clock,
     this.onLogout,
     this.dadosIniciais,
+    this.cartaoSobe = false,
   });
 
   // Lançamentos que o login já buscou (a home não busca de novo): o botão do
   // login vira o cartão e as abas e o resumo descem. Nulo nas outras entradas.
   final MonthBalanceModel? dadosIniciais;
+
+  // Vindo da splash (com `dadosIniciais`): o cartão sobe na entrada, em vez de
+  // ser o destino do voo do botão do login.
+  final bool cartaoSobe;
 
   final BalanceRepository? repository;
   final DateTime Function()? clock;
@@ -64,9 +69,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // A cor do fundo e do botão +: 0 em ganhos, 1 em gastos. Acompanha o dedo e
   // a animação das abas de tipo.
   final ValueNotifier<double> _tipo = ValueNotifier(0);
-  // O Hero do cartão só vale na entrada vinda do login; quando a rota termina
-  // ele é desligado, para o cartão não voar de volta no Sair.
-  late bool _vooDoCartao = widget.dadosIniciais != null;
+  // Entrada animada (vinda do login ou da splash, com `dadosIniciais`): dura
+  // até a rota terminar. O Hero do cartão só vale nela, e só vindo do login,
+  // para o cartão não voar de volta no Sair.
+  late bool _entradaAnimada = widget.dadosIniciais != null;
   Animation<double>? _rota;
 
   @override
@@ -89,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_vooDoCartao || _rota != null) return;
+    if (!_entradaAnimada || _rota != null) return;
     _rota = ModalRoute.of(context)?.animation?..addStatusListener(_fimDaRota);
   }
 
@@ -101,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (status == AnimationStatus.forward) _viuForward = true;
     if (status != AnimationStatus.completed || !_viuForward) return;
     _rota?.removeStatusListener(_fimDaRota);
-    if (mounted) setState(() => _vooDoCartao = false);
+    if (mounted) setState(() => _entradaAnimada = false);
   }
 
   // O erro é tratado pelo FutureBuilder; ignore() evita que ele conte como
@@ -292,10 +298,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final animada = _entradaAnimada && !MediaQuery.disableAnimationsOf(context);
     return HeroMode(
-      enabled: _vooDoCartao,
+      enabled: _entradaAnimada && !widget.cartaoSobe,
       child: EntradaHome(
-        animacao: _vooDoCartao ? _rota : null,
+        animacao: animada ? _rota : null,
+        cartaoSobe: widget.cartaoSobe,
         child: _corpo(context),
       ),
     );
@@ -397,14 +405,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Expanded(
-                          child: BalanceTabView(
-                            gainBalances: data?.gains ?? [],
-                            expensesBalances: data?.expenses ?? [],
-                            initialType: typeBalancePage,
-                            onTabChanged: _handleChangeBalance,
-                            onTabProgress: _handleTabProgress,
-                            onEdit: _onSubmitEdit,
-                            onDelete: _onDelete,
+                          child: EntradaSubindo(
+                            child: BalanceTabView(
+                              gainBalances: data?.gains ?? [],
+                              expensesBalances: data?.expenses ?? [],
+                              initialType: typeBalancePage,
+                              onTabChanged: _handleChangeBalance,
+                              onTabProgress: _handleTabProgress,
+                              onEdit: _onSubmitEdit,
+                              onDelete: _onDelete,
+                            ),
                           ),
                         ),
                       ],

@@ -221,4 +221,46 @@ void main() {
       }
     });
   });
+
+  testWidgets('na saída, as folhas saem pela direita e o texto some', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(size: Size(800, 600)),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Center(
+            child: LogoAnimado(
+              entrada: false,
+              saida: AlwaysStoppedAnimation(1.0),
+            ),
+          ),
+        ),
+      ),
+    );
+    final largura =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio;
+
+    for (final folha in ['folha-1', 'folha-2', 'folha-3']) {
+      expect(
+        parte(tester, folha).left,
+        greaterThanOrEqualTo(largura),
+        reason: folha,
+      );
+    }
+    final opacidades = tester
+        .widgetList<Opacity>(
+          find.ancestor(
+            of: find.byWidgetPredicate(
+              (w) =>
+                  w is SvgPicture &&
+                  (w.bytesLoader as SvgAssetLoader).assetName.contains('texto'),
+            ),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .map((o) => o.opacity);
+    expect(opacidades, everyElement(0.0));
+  });
 }

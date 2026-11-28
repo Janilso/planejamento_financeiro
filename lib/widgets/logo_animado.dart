@@ -20,10 +20,20 @@ const _alturaSvg = 118.0;
 // horizontal, sem parar, cada uma um pouco atrasada em relação à outra. Sem
 // `entrada`, o logo já começa montado (quando chega voando da splash).
 class LogoAnimado extends StatefulWidget {
-  const LogoAnimado({super.key, this.entrada = true, this.balancar = false});
+  const LogoAnimado({
+    super.key,
+    this.entrada = true,
+    this.balancar = false,
+    this.saida,
+  });
 
   final bool entrada;
   final bool balancar;
+
+  // Saída para a home (splash, usuário logado): de 0 a 1, as folhas saem
+  // voando pela borda direita da tela, uma depois da outra, e o texto desce
+  // 16 dp e some.
+  final Animation<double>? saida;
 
   static const duracao = Duration(milliseconds: 1500);
   static const cicloDoBalanco = Duration(milliseconds: 2000);
@@ -136,6 +146,28 @@ class _LogoAnimadoState extends State<LogoAnimado>
     height: _altura,
   );
 
+  // Folhas: andam para a direita até sair da tela (a partir da borda esquerda
+  // do logo, a largura da tela basta). Texto: desce 16 dp e some.
+  Widget _sai(Widget filho, double inicio, double fim, {required bool folha}) {
+    final saida = widget.saida;
+    if (saida == null) return filho;
+    final intervalo = Interval(inicio, fim, curve: Curves.easeInCubic);
+    final largura = MediaQuery.sizeOf(context).width;
+    return AnimatedBuilder(
+      animation: saida,
+      builder: (context, c) {
+        final t = intervalo.transform(saida.value);
+        return folha
+            ? Transform.translate(offset: Offset(t * largura, 0), child: c)
+            : Opacity(
+                opacity: 1 - t,
+                child: Transform.translate(offset: Offset(0, t * 16), child: c),
+              );
+      },
+      child: filho,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Center: na splash o logo fica numa ListView, que força a largura da tela;
@@ -144,13 +176,15 @@ class _LogoAnimadoState extends State<LogoAnimado>
       child: SizedBox(
         width: _largura,
         height: _altura,
+        // As folhas saem da caixa do logo ao voar: sem recorte.
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            _folha('folha-3', 0.0, 0.35, 0.24),
-            _folha('folha-2', 0.1, 0.45, 0.12),
-            _folha('folha-1', 0.2, 0.55, 0.0),
-            _texto('texto-1', 84, 101, 0.5),
-            _texto('texto-2', 104, 118, 0.62),
+            _sai(_folha('folha-3', 0.0, 0.35, 0.24), 0.3, 0.9, folha: true),
+            _sai(_folha('folha-2', 0.1, 0.45, 0.12), 0.15, 0.75, folha: true),
+            _sai(_folha('folha-1', 0.2, 0.55, 0.0), 0.0, 0.6, folha: true),
+            _sai(_texto('texto-1', 84, 101, 0.5), 0.0, 0.5, folha: false),
+            _sai(_texto('texto-2', 104, 118, 0.62), 0.0, 0.5, folha: false),
           ],
         ),
       ),
