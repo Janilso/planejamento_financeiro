@@ -294,13 +294,20 @@ class _HomeScreenState extends State<HomeScreen> {
               length: months.length,
               onChangePage: _handleChangeMonth,
               buildTabBar: _buildTabBuilder,
-              trailing: PopupMenuButton<String>(
-                tooltip: 'Mais opções',
-                icon: const Icon(Icons.more_vert, color: AppColors.white),
-                onSelected: (_) => _confirmLogout(),
-                itemBuilder: (context) => const [
-                  PopupMenuItem<String>(value: 'sair', child: Text('Sair')),
-                ],
+              // O botão tem 48 dp e o ⋮ fica no meio: do centro à borda são
+              // 24 dp, e os pontos têm 2 dp de raio. Deslocar o botão 22 dp
+              // leva a borda dos pontos até a borda do conteúdo; a área de
+              // toque e o efeito avançam sobre a margem da tela.
+              trailing: Transform.translate(
+                offset: const Offset(22, 0),
+                child: PopupMenuButton<String>(
+                  tooltip: 'Mais opções',
+                  icon: const Icon(Icons.more_vert, color: AppColors.white),
+                  onSelected: (_) => _confirmLogout(),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem<String>(value: 'sair', child: Text('Sair')),
+                  ],
+                ),
               ),
               buildTabView: (context, index) => FutureBuilder(
                 future: _balances,

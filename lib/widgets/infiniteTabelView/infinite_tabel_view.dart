@@ -68,37 +68,50 @@ class InfiniteTabViewState extends State<InfiniteTabView>
       initialIndex: widget.initialIndex,
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TabBar(
-                  // Recria ao mudar a escala da fonte, para a aba selecionada
-                  // continuar visível.
-                  key: ValueKey(MediaQuery.textScalerOf(context)),
-                  controller: _tabController,
-                  labelPadding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  unselectedLabelStyle: AppTextsStyle.bodyLarge(
-                    color: AppColors.white,
+          // As abas ocupam a largura toda, menos uma margem igual dos dois lados
+          // (a da direita, antes do menu): o mês selecionado fica no centro da
+          // tela. O menu fica por cima, no canto direito, e a margem deixa o
+          // efeito do toque (círculo de 40 dp) fora do nome do mês.
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.centerRight,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: widget.trailing == null ? 0 : AppSpacing.xl,
                   ),
-                  labelStyle: AppTextsStyle.bodyLarge(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.white,
-                  ),
-                  tabs: List.generate(
-                    widget.length,
-                    (index) => Tab(
-                      text: widget.buildTabBar!(context, index),
-                      height: 48,
+                  child: TabBar(
+                    // Recria ao mudar a escala da fonte, para a aba selecionada
+                    // continuar visível.
+                    key: ValueKey(MediaQuery.textScalerOf(context)),
+                    controller: _tabController,
+                    labelPadding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
                     ),
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    unselectedLabelStyle: AppTextsStyle.bodyLarge(
+                      color: AppColors.white,
+                    ),
+                    labelStyle: AppTextsStyle.bodyLarge(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.white,
+                    ),
+                    tabs: List.generate(
+                      widget.length,
+                      (index) => Tab(
+                        text: widget.buildTabBar!(context, index),
+                        height: 48,
+                      ),
+                    ),
+                    indicatorColor: AppColors.white,
+                    dividerHeight: 0,
                   ),
-                  indicatorColor: AppColors.white,
-                  dividerHeight: 0,
                 ),
-              ),
-              ?widget.trailing,
-            ],
+                ?widget.trailing,
+              ],
+            ),
           ),
           Expanded(
             child: TabBarView(
