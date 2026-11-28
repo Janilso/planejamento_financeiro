@@ -39,7 +39,8 @@ dart format --output=none --set-exit-if-changed lib test
 | `widgets/balance_test.dart` | Subtítulo, ícone de status, valor e toque do item |
 | `widgets/balance_resume_test.dart` | "Falta receber/pagar", balanço negativo e valores enormes |
 | `widgets/balance_tab_view_test.dart` | Mês vazio, espaço para o +, arraste e abas de 48 dp |
-| `widgets/logo_animado_test.dart` | Logo da splash: tamanho, partes fora do lugar no começo, tudo no lugar em 1,5 s, faixas do texto sem cortar letras, movimento reduzido e o balanço das folhas no login |
+| `screens/splash_para_home_test.dart` | Splash logada: busca durante a espera, folhas saindo, home entrando sem loader, sem sessão, falha da busca e movimento reduzido. Usa passos de 50 ms |
+| `widgets/logo_animado_test.dart` | Logo da splash: tamanho, partes fora do lugar no começo, tudo no lugar em 1,5 s, faixas do texto sem cortar letras, movimento reduzido, o balanço das folhas no login e a saída (folhas pela direita, texto some) |
 | `widgets/delete_dialog_test.dart` | Opções, textos, cor de perigo e acessibilidade do diálogo de excluir |
 | `widgets/form_balance_test.dart` | Título, estilo único dos valores, contador, Excluir pela edição e acessibilidade |
 | `volumes_test.dart` | Os históricos sintéticos (`test/volumes.dart`): contagem de itens, meses, ids, datas às 15:00Z e determinismo |
