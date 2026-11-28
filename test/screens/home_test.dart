@@ -219,6 +219,36 @@ void main() {
     expect(find.text('Sair'), findsOneWidget);
   });
 
+  testWidgets('o mês selecionado fica no centro da tela', (tester) async {
+    tester.view.physicalSize = const Size(392, 850);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await pumpHome(tester, FakeBalanceRepository(data: {}));
+    await tester.pumpAndSettle();
+
+    // O menu ⋮ ocupa 48 dp à direita das abas; sem um espaço igual à esquerda,
+    // o mês selecionado centraliza no que sobra e fica 24 dp para a esquerda.
+    expect(tester.getCenter(find.text('NOV/26')).dx, closeTo(196, 1));
+
+    // As abas vão da margem até antes do menu, com a mesma folga dos dois
+    // lados (conteúdo de 16 a 376, menos 32 de cada lado)...
+    final abas = tester.getRect(find.byType(TabBar).first);
+    expect(abas.left, closeTo(48, 0.5));
+    expect(abas.right, closeTo(344, 0.5));
+    // ...e o efeito do toque no menu (círculo de 40 dp, raio 20 em volta do
+    // centro do ícone) não passa por cima do nome do mês.
+    final centroDoMenu = tester.getCenter(find.byIcon(Icons.more_vert)).dx;
+    expect(abas.right, lessThanOrEqualTo(centroDoMenu - 20));
+
+    // Os meses vizinhos ficam cortados pelas bordas das abas: toca na parte
+    // visível de OUT/26 (à esquerda) e confere que ele vem para o centro.
+    await tester.tapAt(
+      tester.getCenter(find.text('OUT/26')) + const Offset(20, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(find.text('OUT/26')).dx, closeTo(196, 1));
+  });
+
   testWidgets('fonte em 130% não estoura e mantém NOV/26 visível', (
     tester,
   ) async {

@@ -18,7 +18,7 @@
 └────────────────────────────────────┘
 ```
 
-Não há barra de título: o mês fica só nas abas e o topo usa a cor do tipo, até a barra de status. Os pontos do menu ⋮ terminam na borda direita do conteúdo (a mesma dos cartões da lista): o botão de 48 dp é deslocado 22 dp para a direita (`Transform.translate`; 24 dp do centro à borda do botão menos os 2 dp de raio dos pontos), então a área de toque e o efeito do toque avançam sobre a margem da tela. O menu ⋮ ("Mais opções") tem o item "Sair", que abre o diálogo "Sair da conta?" ("Seus lançamentos continuam salvos."), com "Sair" no vermelho de perigo.
+Não há barra de título: o mês fica só nas abas e o topo usa a cor do tipo, até a barra de status. As abas de mês ocupam a largura do conteúdo menos 32 dp de cada lado (a folga da direita separa as abas do menu, que fica por cima, no canto, e deixa o efeito do toque de 40 dp fora do nome do mês), então o mês selecionado fica no centro da tela e as abas vizinhas aparecem até perto do menu. Os pontos do menu ⋮ terminam na borda direita do conteúdo (a mesma dos cartões da lista): o botão de 48 dp é deslocado 22 dp para a direita (`Transform.translate`; 24 dp do centro à borda do botão menos os 2 dp de raio dos pontos), então a área de toque e o efeito do toque avançam sobre a margem da tela. O menu ⋮ ("Mais opções") tem o item "Sair", que abre o diálogo "Sair da conta?" ("Seus lançamentos continuam salvos."), com "Sair" no vermelho de perigo.
 
 A cor muda com a aba de tipo: verde-água (`#44A2A6`) para ganhos e coral (`#F7646C`) para gastos, acompanhando o dedo no arraste e a animação do toque na aba (detalhes em `docs/tema-e-layout.md`).
 
